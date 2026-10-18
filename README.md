@@ -7,7 +7,8 @@ A local AI agent that answers plain-English questions about 20.9M US domestic fl
 ## Progress
 - [x] Day 1: Ollama + qwen2.5-coder:7b running on GPU (RTX 5060, ~4.6 GB VRAM)
 - [x] Day 1: 36 BTS CSVs converted to one Parquet file (20,928,599 rows, 357 MB, 16 s)
-- [x] Day 1: First DuckDB queries matched against SkyMetrics. Found a null-handling bug: Skymetrics counted cancelled/diverted flights as on-time (79.1% vs correct 77.55%)
+- [x] Day 1: First DuckDB queries matched against SkyMetrics. Found a null-handling bug: SkyMetrics counted cancelled/diverted flights as on-time (79.1% vs correct 77.5%)
+- [x] Day 2: Verified answer key (11 questions). Baseline with raw schema only: **2/5 correct (40%)**. Failures were about column meaning and metric definitions, not SQL syntax
 - [ ] Agent loop, guardrails, evaluation
 
 ## Data
