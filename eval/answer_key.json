@@ -1,0 +1,294 @@
+[
+  {
+    "id": "q01",
+    "question": "How many flights are in the dataset?",
+    "sql": "SELECT COUNT(*) AS total_flights FROM flights",
+    "columns": [
+      "total_flights"
+    ],
+    "rows": [
+      [
+        20928599
+      ]
+    ]
+  },
+  {
+    "id": "q02",
+    "question": "What is the overall on-time percentage?",
+    "sql": "SELECT ROUND(100.0 * COUNT(*) FILTER (WHERE ARR_DEL15 = 0) / COUNT(*), 2) AS on_time_pct FROM flights",
+    "columns": [
+      "on_time_pct"
+    ],
+    "rows": [
+      [
+        77.49
+      ]
+    ]
+  },
+  {
+    "id": "q03",
+    "question": "What is the average arrival delay in minutes?",
+    "sql": "SELECT ROUND(AVG(ARR_DELAY), 2) AS avg_arr_delay FROM flights",
+    "columns": [
+      "avg_arr_delay"
+    ],
+    "rows": [
+      [
+        7.41
+      ]
+    ]
+  },
+  {
+    "id": "q04",
+    "question": "What is the average departure delay in minutes?",
+    "sql": "SELECT ROUND(AVG(DEP_DELAY), 2) AS avg_dep_delay FROM flights",
+    "columns": [
+      "avg_dep_delay"
+    ],
+    "rows": [
+      [
+        12.84
+      ]
+    ]
+  },
+  {
+    "id": "q05",
+    "question": "What percentage of flights were cancelled?",
+    "sql": "SELECT ROUND(100.0 * SUM(CANCELLED) / COUNT(*), 2) AS cancel_pct FROM flights",
+    "columns": [
+      "cancel_pct"
+    ],
+    "rows": [
+      [
+        1.37
+      ]
+    ]
+  },
+  {
+    "id": "q06",
+    "question": "How many cancellations were there for each reason?",
+    "sql": "SELECT CANCELLATION_CODE, COUNT(*) AS cancellations\n               FROM flights WHERE CANCELLED = 1\n               GROUP BY 1 ORDER BY 2 DESC",
+    "columns": [
+      "CANCELLATION_CODE",
+      "cancellations"
+    ],
+    "rows": [
+      [
+        "B",
+        164932
+      ],
+      [
+        "A",
+        77165
+      ],
+      [
+        "C",
+        44771
+      ],
+      [
+        "D",
+        266
+      ]
+    ]
+  },
+  {
+    "id": "q07",
+    "question": "What are the total delay minutes by cause, in millions?",
+    "sql": "SELECT ROUND(SUM(LATE_AIRCRAFT_DELAY) / 1e6, 2) AS late_aircraft,\n                      ROUND(SUM(CARRIER_DELAY) / 1e6, 2)       AS carrier,\n                      ROUND(SUM(NAS_DELAY) / 1e6, 2)           AS nas,\n                      ROUND(SUM(WEATHER_DELAY) / 1e6, 2)       AS weather,\n                      ROUND(SUM(SECURITY_DELAY) / 1e6, 2)      AS security\n               FROM flights",
+    "columns": [
+      "late_aircraft",
+      "carrier",
+      "nas",
+      "weather",
+      "security"
+    ],
+    "rows": [
+      [
+        124.15,
+        107.01,
+        61.42,
+        18.31,
+        0.54
+      ]
+    ]
+  },
+  {
+    "id": "q08",
+    "question": "What is the on-time percentage for each carrier, best to worst?",
+    "sql": "SELECT OP_UNIQUE_CARRIER, ROUND(100.0 * COUNT(*) FILTER (WHERE ARR_DEL15 = 0) / COUNT(*), 2) AS on_time_pct\n                FROM flights GROUP BY 1 ORDER BY 2 DESC",
+    "columns": [
+      "OP_UNIQUE_CARRIER",
+      "on_time_pct"
+    ],
+    "rows": [
+      [
+        "9E",
+        83.09
+      ],
+      [
+        "DL",
+        81.15
+      ],
+      [
+        "YX",
+        81.14
+      ],
+      [
+        "HA",
+        80.2
+      ],
+      [
+        "OO",
+        79.9
+      ],
+      [
+        "MQ",
+        78.37
+      ],
+      [
+        "UA",
+        78.1
+      ],
+      [
+        "WN",
+        77.86
+      ],
+      [
+        "AS",
+        77.14
+      ],
+      [
+        "OH",
+        75.4
+      ],
+      [
+        "G4",
+        74.86
+      ],
+      [
+        "AA",
+        73.68
+      ],
+      [
+        "NK",
+        73.4
+      ],
+      [
+        "B6",
+        70.64
+      ],
+      [
+        "F9",
+        69.14
+      ]
+    ]
+  },
+  {
+    "id": "q09",
+    "question": "What is the on-time percentage for each month?",
+    "sql": "SELECT MONTH, ROUND(100.0 * COUNT(*) FILTER (WHERE ARR_DEL15 = 0) / COUNT(*), 2) AS on_time_pct\n                FROM flights GROUP BY 1 ORDER BY 1",
+    "columns": [
+      "MONTH",
+      "on_time_pct"
+    ],
+    "rows": [
+      [
+        1,
+        75.87
+      ],
+      [
+        2,
+        80.32
+      ],
+      [
+        3,
+        77.56
+      ],
+      [
+        4,
+        78.46
+      ],
+      [
+        5,
+        76.24
+      ],
+      [
+        6,
+        71.78
+      ],
+      [
+        7,
+        68.84
+      ],
+      [
+        8,
+        75.97
+      ],
+      [
+        9,
+        82.26
+      ],
+      [
+        10,
+        82.98
+      ],
+      [
+        11,
+        82.77
+      ],
+      [
+        12,
+        77.88
+      ]
+    ]
+  },
+  {
+    "id": "q10",
+    "question": "What is the on-time percentage for each day of the week?",
+    "sql": "SELECT dayname(FL_DATE) AS weekday, ROUND(100.0 * COUNT(*) FILTER (WHERE ARR_DEL15 = 0) / COUNT(*), 2) AS on_time_pct\n                FROM flights GROUP BY 1 ORDER BY 2 DESC",
+    "columns": [
+      "weekday",
+      "on_time_pct"
+    ],
+    "rows": [
+      [
+        "Tuesday",
+        80.83
+      ],
+      [
+        "Wednesday",
+        79.64
+      ],
+      [
+        "Saturday",
+        78.34
+      ],
+      [
+        "Monday",
+        77.15
+      ],
+      [
+        "Thursday",
+        76.49
+      ],
+      [
+        "Friday",
+        75.67
+      ],
+      [
+        "Sunday",
+        74.77
+      ]
+    ]
+  },
+  {
+    "id": "q11",
+    "question": "How many flights did Mesa Airlines (YV) operate each year?",
+    "sql": "SELECT YEAR, COUNT(*) AS flights\n               FROM flights WHERE OP_UNIQUE_CARRIER = 'YV'\n               GROUP BY 1 ORDER BY 1",
+    "columns": [
+      "YEAR",
+      "flights"
+    ],
+    "rows": []
+  }
+]
