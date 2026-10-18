@@ -1,0 +1,37 @@
+[
+  {
+    "id": "q01",
+    "question": "How many flights are in the dataset?",
+    "sql": "SELECT COUNT(*) AS total_flights FROM flights",
+    "correct": true,
+    "error": null
+  },
+  {
+    "id": "q02",
+    "question": "What is the overall on-time percentage?",
+    "sql": "SELECT ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage\nFROM flights",
+    "correct": true,
+    "error": null
+  },
+  {
+    "id": "q05",
+    "question": "What percentage of flights were cancelled?",
+    "sql": "SELECT ROUND(100 * AVG(is_cancelled::INT), 2) AS cancellation_rate\nFROM flights",
+    "correct": true,
+    "error": null
+  },
+  {
+    "id": "q08",
+    "question": "What is the on-time percentage for each carrier, best to worst?",
+    "sql": "SELECT \n    carrier_code, \n    carrier_name, \n    ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage\nFROM \n    flights\nGROUP BY \n    carrier_code, \n    carrier_name\nORDER BY \n    on_time_percentage DESC",
+    "correct": true,
+    "error": null
+  },
+  {
+    "id": "q10",
+    "question": "What is the on-time percentage for each day of the week?",
+    "sql": "SELECT \n    weekday, \n    ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage\nFROM \n    flights\nGROUP BY \n    weekday\nORDER BY \n    on_time_percentage DESC",
+    "correct": true,
+    "error": null
+  }
+]

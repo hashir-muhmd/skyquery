@@ -1,0 +1,37 @@
+[
+  {
+    "id": "q01",
+    "question": "How many flights are in the dataset?",
+    "sql": "SELECT COUNT(*) FROM flights",
+    "correct": true,
+    "error": null
+  },
+  {
+    "id": "q02",
+    "question": "What is the overall on-time percentage?",
+    "sql": "SELECT (SUM(CASE WHEN ARR_DEL15 = 0 THEN 1 ELSE 0 END) / COUNT(*)) * 100 AS overall_on_time_percentage\nFROM flights",
+    "correct": true,
+    "error": null
+  },
+  {
+    "id": "q05",
+    "question": "What percentage of flights were cancelled?",
+    "sql": "SELECT (SUM(CANCELLED) / COUNT(*)) * 100 AS cancellation_percentage FROM flights",
+    "correct": true,
+    "error": null
+  },
+  {
+    "id": "q08",
+    "question": "What is the on-time percentage for each carrier, best to worst?",
+    "sql": "SELECT OP_UNIQUE_CARRIER, \n       (1 - AVG(ARR_DEL15)) * 100 AS on_time_percentage\nFROM flights\nGROUP BY OP_UNIQUE_CARRIER\nORDER BY on_time_percentage DESC",
+    "correct": false,
+    "error": null
+  },
+  {
+    "id": "q10",
+    "question": "What is the on-time percentage for each day of the week?",
+    "sql": "SELECT \n    DAY_OF_WEEK(FL_DATE) AS DAY_OF_WEEK,\n    SUM(CASE WHEN ARR_DEL15 = 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS ON_TIME_PERCENTAGE\nFROM \n    flights\nGROUP BY \n    DAY_OF_WEEK(FL_DATE)\nORDER BY \n    DAY_OF_WEEK(FL_DATE)",
+    "correct": false,
+    "error": "Catalog Error: Scalar Function with name day_of_week does not exist!"
+  }
+]
