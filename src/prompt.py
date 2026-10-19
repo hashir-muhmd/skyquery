@@ -21,7 +21,9 @@ Rules:
 - On-time percentage = ROUND(100 * AVG(is_on_time::INT), 2), over ALL flights.
 - Cancellation rate = ROUND(100 * AVG(is_cancelled::INT), 2).
 - "Best to worst" means ORDER BY the metric DESC.
-- When ranking airports, only include airports with at least 10,000 flights."""
+- When ranking airports, only include airports with at least 10,000 flights.
+- "Airport" means the departure airport (origin), unless the question mentions arrivals or destinations (then use dest).
+- If no year is given, include all years 2023-2025 combined."""
 
 PROMPT_TEMPLATE = """You write DuckDB SQL for the table below.
 
