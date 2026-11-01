@@ -62,11 +62,29 @@ SELECT
 FROM '{PARQUET}'
 """
 
+CAUSES_VIEW_SQL = """
+CREATE OR REPLACE VIEW delay_causes AS
+SELECT * FROM (
+    UNPIVOT (
+        SELECT flight_date, year, month, carrier_code, carrier_name, origin, dest,
+               carrier_delay_min       AS "Carrier",
+               weather_delay_min       AS "Weather",
+               nas_delay_min           AS "National Air System",
+               security_delay_min      AS "Security",
+               late_aircraft_delay_min AS "Late aircraft"
+        FROM flights
+    )
+    ON "Carrier", "Weather", "National Air System", "Security", "Late aircraft"
+    INTO NAME cause VALUE minutes
+)
+"""
+
 
 def connect():
     """Open DuckDB with the semantic view ready to query."""
     con = duckdb.connect()
     con.execute(VIEW_SQL)
+    con.execute(CAUSES_VIEW_SQL)
     return con
 
 

@@ -30,7 +30,8 @@ Result ({count} rows):
 
 Answer the question in 1-3 sentences using ONLY the numbers in the result.
 Then add one line starting with "Note:" saying how the question was interpreted
-(say whether airports are departures (origin) or arrivals (dest), and which years were included)."""
+(if airports are involved, say whether they are departures (origin) or arrivals (dest);
+always say which years were included)."""
 
 
 def extract_sql(text):

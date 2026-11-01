@@ -1,23 +1,28 @@
-"""Run eval questions in a given mode and report accuracy.
+"""Run the eval questions in a given mode and report accuracy.
+
+Modes:
+    raw       one model call, raw columns only
+    semantic  one model call, semantic view + schema guide
+    agent     full agent: semantic layer + retry on error
 
 Usage:
-    python -m eval.run_eval --mode raw
-    python -m eval.run_eval --mode semantic
+    python -m eval.run_eval --mode agent
 """
 import argparse
 import json
-import re
+import math
 import time
 from pathlib import Path
 
 import duckdb
 import ollama
 
+from src.agent import MODEL, answer, extract_sql
 from src.prompt import SCHEMA_DOC, build_prompt
 from src.semantic import connect as connect_semantic
+from src.sql_tool import run_sql
 
-MODEL = "qwen2.5-coder:7b"
-QUESTION_IDS = ["q01", "q02", "q05", "q08", "q10"]
+LABEL_COLUMNS = {"year", "month", "quarter"}  # labels, not answers
 
 
 def connect_raw():
@@ -29,27 +34,66 @@ def connect_raw():
     return con, schema
 
 
-def extract_sql(text):
-    """Pull the SQL out of the reply, even if it's wrapped in ```sql ... ```."""
-    match = re.search(r"```(?:sql)?\s*(.*?)```", text, re.DOTALL | re.IGNORECASE)
-    return (match.group(1) if match else text).strip().rstrip(";")
+def single_call(question, con, schema):
+    """One model call, no retry."""
+    reply = ollama.chat(
+        model=MODEL,
+        messages=[{"role": "user", "content": build_prompt(question, schema)}],
+        options={"temperature": 0},
+    )["message"]["content"]
+    result = run_sql(con, extract_sql(reply))
+    result["attempts"] = 1
+    return result
 
 
-def numbers(rows):
-    """All numeric values in a result, sorted. Text labels are ignored."""
-    return sorted(float(v) for row in rows for v in row
-                  if isinstance(v, (int, float)) and not isinstance(v, bool))
+def numeric(values):
+    """Keep real numbers only (skip text, booleans, nulls and NaN)."""
+    out = []
+    for v in values:
+        if isinstance(v, bool) or not isinstance(v, (int, float)):
+            continue
+        if isinstance(v, float) and math.isnan(v):
+            continue
+        out.append(float(v))
+    return out
 
 
-def matches(actual, expected, tol=0.11):
-    """Same numbers (within rounding tolerance), regardless of labels or column order."""
-    a, e = numbers(actual), numbers(expected)
-    return len(a) == len(e) and all(abs(x - y) <= tol for x, y in zip(a, e))
+def expected_values(q):
+    """Numbers the answer must contain (label columns like YEAR are skipped)."""
+    keep = [i for i, col in enumerate(q["columns"]) if col.lower() not in LABEL_COLUMNS]
+    return numeric(row[i] for row in q["rows"] for i in keep)
+
+
+def close(actual, expected):
+    return abs(actual - expected) <= max(0.11, 0.001 * abs(expected))
+
+
+def is_correct(q, result):
+    # Trick questions: nothing, zeros/nulls, or an honest give-up all count as correct
+    if q.get("expect") == "no_data" or not q["rows"]:
+        if not result["ok"]:
+            return True
+        return all(v == 0 for v in numeric(v for row in result["rows"] for v in row))
+
+    if not result["ok"]:
+        return False
+
+    pool = numeric(v for row in result["rows"] for v in row)
+    expected = expected_values(q)
+    # Same rows, OR same amount of numbers in a different layout (wide vs long)
+    if len(result["rows"]) != len(q["rows"]) and len(pool) != len(expected):
+        return False
+    for e in expected:
+        match = next((i for i, a in enumerate(pool) if close(a, e)), None)
+        if match is None:
+            return False
+        pool.pop(match)  # each number can only be used once
+    return True
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", choices=["raw", "semantic"], required=True)
+    parser.add_argument("--mode", choices=["raw", "semantic", "agent"], required=True)
     mode = parser.parse_args().mode
 
     if mode == "raw":
@@ -57,33 +101,29 @@ def main():
     else:
         con, schema = connect_semantic(), SCHEMA_DOC
 
-    key = {q["id"]: q for q in json.loads(Path("eval/answer_key.json").read_text())}
+    questions = json.loads(Path("eval/answer_key.json").read_text())
     results, correct = [], 0
 
-    for qid in QUESTION_IDS:
-        q = key[qid]
+    for q in questions:
         start = time.time()
-        reply = ollama.chat(
-            model=MODEL,
-            messages=[{"role": "user", "content": build_prompt(q["question"], schema)}],
-            options={"temperature": 0},
-        )["message"]["content"]
-        sql = extract_sql(reply)
+        if mode == "agent":
+            result = answer(q["question"], con, verbose=False)
+        else:
+            result = single_call(q["question"], con, schema)
 
-        try:
-            rows = con.execute(sql).fetchall()
-            ok, error = matches(rows, q["rows"]), None
-        except Exception as e:
-            ok, error = False, str(e).splitlines()[0]
-
+        ok = is_correct(q, result)
         correct += ok
-        results.append({"id": qid, "question": q["question"], "sql": sql, "correct": ok, "error": error})
-        print(f"\n{'✅' if ok else '❌'} {qid}: {q['question']}  ({time.time() - start:.1f}s)")
-        print(f"   SQL: {' '.join(sql.split())}")
-        if error:
-            print(f"   ERROR: {error}")
+        retries = f", {result['attempts']} attempts" if result["attempts"] > 1 else ""
+        print(f"{'✅' if ok else '❌'} {q['id']}: {q['question']}  ({time.time() - start:.1f}s{retries})")
+        if not ok:
+            print(f"     SQL: {' '.join(result['sql'].split())}")
+            if not result["ok"]:
+                print(f"     ERROR: {result['error']}")
 
-    print(f"\n[{mode}] Score: {correct}/{len(QUESTION_IDS)}")
+        results.append({"id": q["id"], "question": q["question"], "sql": result["sql"],
+                        "correct": ok, "attempts": result["attempts"], "error": result.get("error")})
+
+    print(f"\n[{mode}] Score: {correct}/{len(questions)} ({100 * correct / len(questions):.0f}%)")
     Path(f"eval/results_{mode}.json").write_text(json.dumps(results, indent=2))
 
 

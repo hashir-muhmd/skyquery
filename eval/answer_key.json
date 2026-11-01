@@ -284,11 +284,320 @@
   {
     "id": "q11",
     "question": "How many flights did Mesa Airlines (YV) operate each year?",
-    "sql": "SELECT YEAR, COUNT(*) AS flights\n               FROM flights WHERE OP_UNIQUE_CARRIER = 'YV'\n               GROUP BY 1 ORDER BY 1",
+    "sql": "SELECT YEAR, COUNT(*) AS flights\n               FROM flights WHERE OP_UNIQUE_CARRIER = 'YV'\n                              GROUP BY 1 ORDER BY 1",
     "columns": [
       "YEAR",
       "flights"
     ],
+    "rows": []
+  },
+  {
+    "id": "q12",
+    "question": "What was Delta's on-time percentage in 2024?",
+    "sql": "SELECT ROUND(100.0 * COUNT(*) FILTER (WHERE ARR_DEL15 = 0) / COUNT(*), 2) AS on_time_pct FROM flights\n                WHERE OP_UNIQUE_CARRIER = 'DL' AND YEAR = 2024",
+    "columns": [
+      "on_time_pct"
+    ],
+    "rows": [
+      [
+        81.81
+      ]
+    ]
+  },
+  {
+    "id": "q13",
+    "question": "How many flights departed from JFK in 2023?",
+    "sql": "SELECT COUNT(*) AS flights FROM flights WHERE ORIGIN = 'JFK' AND YEAR = 2023",
+    "columns": [
+      "flights"
+    ],
+    "rows": [
+      [
+        133048
+      ]
+    ]
+  },
+  {
+    "id": "q14",
+    "question": "How did the on-time percentage change from year to year?",
+    "sql": "SELECT YEAR, ROUND(100.0 * COUNT(*) FILTER (WHERE ARR_DEL15 = 0) / COUNT(*), 2) AS on_time_pct FROM flights GROUP BY 1 ORDER BY 1",
+    "columns": [
+      "YEAR",
+      "on_time_pct"
+    ],
+    "rows": [
+      [
+        2023,
+        78.22
+      ],
+      [
+        2024,
+        77.91
+      ],
+      [
+        2025,
+        76.34
+      ]
+    ]
+  },
+  {
+    "id": "q15",
+    "question": "What was the average NAS delay per delayed flight in each year?",
+    "sql": "SELECT YEAR, ROUND(AVG(NAS_DELAY), 2) AS avg_nas_delay\n               FROM flights WHERE ARR_DEL15 = 1 GROUP BY 1 ORDER BY 1",
+    "columns": [
+      "YEAR",
+      "avg_nas_delay"
+    ],
+    "rows": [
+      [
+        2023,
+        12.48
+      ],
+      [
+        2024,
+        13.53
+      ],
+      [
+        2025,
+        15.96
+      ]
+    ]
+  },
+  {
+    "id": "q16",
+    "question": "Which delay cause accounts for the most total delay minutes, and how many minutes?",
+    "sql": "SELECT 'Late aircraft' AS cause, SUM(LATE_AIRCRAFT_DELAY) AS total_minutes FROM flights",
+    "columns": [
+      "cause",
+      "total_minutes"
+    ],
+    "rows": [
+      [
+        "Late aircraft",
+        124146982.0
+      ]
+    ]
+  },
+  {
+    "id": "q17",
+    "question": "For flights that had a weather delay, what was the average weather delay in minutes?",
+    "sql": "SELECT ROUND(AVG(WEATHER_DELAY), 2) AS avg_weather_delay FROM flights WHERE WEATHER_DELAY > 0",
+    "columns": [
+      "avg_weather_delay"
+    ],
+    "rows": [
+      [
+        70.17
+      ]
+    ]
+  },
+  {
+    "id": "q18",
+    "question": "Which 5 airports with at least 10,000 arriving flights had the best on-time percentage for arrivals?",
+    "sql": "SELECT DEST, ROUND(100.0 * COUNT(*) FILTER (WHERE ARR_DEL15 = 0) / COUNT(*), 2) AS on_time_pct FROM flights\n                GROUP BY 1 HAVING COUNT(*) >= 10000 ORDER BY 2 DESC LIMIT 5",
+    "columns": [
+      "DEST",
+      "on_time_pct"
+    ],
+    "rows": [
+      [
+        "ITO",
+        85.31
+      ],
+      [
+        "SGU",
+        85.04
+      ],
+      [
+        "OGG",
+        84.41
+      ],
+      [
+        "SLC",
+        84.1
+      ],
+      [
+        "LIH",
+        84.0
+      ]
+    ]
+  },
+  {
+    "id": "q19",
+    "question": "Which airport had the most departing flights?",
+    "sql": "SELECT ORIGIN, COUNT(*) AS flights FROM flights GROUP BY 1 ORDER BY 2 DESC LIMIT 1",
+    "columns": [
+      "ORIGIN",
+      "flights"
+    ],
+    "rows": [
+      [
+        "ATL",
+        992806
+      ]
+    ]
+  },
+  {
+    "id": "q20",
+    "question": "Which carrier had the highest cancellation rate?",
+    "sql": "SELECT OP_UNIQUE_CARRIER, ROUND(100.0 * SUM(CANCELLED) / COUNT(*), 2) AS cancel_pct\n               FROM flights GROUP BY 1 ORDER BY 2 DESC LIMIT 1",
+    "columns": [
+      "OP_UNIQUE_CARRIER",
+      "cancel_pct"
+    ],
+    "rows": [
+      [
+        "YX",
+        2.66
+      ]
+    ]
+  },
+  {
+    "id": "q21",
+    "question": "Which single month (year and month) had the worst on-time percentage?",
+    "sql": "SELECT YEAR, MONTH, ROUND(100.0 * COUNT(*) FILTER (WHERE ARR_DEL15 = 0) / COUNT(*), 2) AS on_time_pct FROM flights\n                GROUP BY 1, 2 ORDER BY 3 ASC LIMIT 1",
+    "columns": [
+      "YEAR",
+      "MONTH",
+      "on_time_pct"
+    ],
+    "rows": [
+      [
+        2024,
+        7,
+        68.08
+      ]
+    ]
+  },
+  {
+    "id": "q22",
+    "question": "How many flights flew from JFK to LAX?",
+    "sql": "SELECT COUNT(*) AS flights FROM flights WHERE ORIGIN = 'JFK' AND DEST = 'LAX'",
+    "columns": [
+      "flights"
+    ],
+    "rows": [
+      [
+        30228
+      ]
+    ]
+  },
+  {
+    "id": "q23",
+    "question": "What is the average flight distance in miles for each carrier?",
+    "sql": "SELECT OP_UNIQUE_CARRIER, ROUND(AVG(DISTANCE), 1) AS avg_distance\n               FROM flights GROUP BY 1 ORDER BY 2 DESC",
+    "columns": [
+      "OP_UNIQUE_CARRIER",
+      "avg_distance"
+    ],
+    "rows": [
+      [
+        "AS",
+        1394.5
+      ],
+      [
+        "B6",
+        1176.2
+      ],
+      [
+        "UA",
+        1118.8
+      ],
+      [
+        "AA",
+        974.9
+      ],
+      [
+        "NK",
+        969.0
+      ],
+      [
+        "DL",
+        952.0
+      ],
+      [
+        "F9",
+        921.7
+      ],
+      [
+        "HA",
+        913.4
+      ],
+      [
+        "G4",
+        900.3
+      ],
+      [
+        "WN",
+        751.0
+      ],
+      [
+        "MQ",
+        517.8
+      ],
+      [
+        "YX",
+        493.1
+      ],
+      [
+        "OO",
+        453.9
+      ],
+      [
+        "OH",
+        442.1
+      ],
+      [
+        "9E",
+        440.4
+      ]
+    ]
+  },
+  {
+    "id": "q24",
+    "question": "How many flights were diverted?",
+    "sql": "SELECT CAST(SUM(DIVERTED) AS BIGINT) AS diverted_flights FROM flights",
+    "columns": [
+      "diverted_flights"
+    ],
+    "rows": [
+      [
+        53309
+      ]
+    ]
+  },
+  {
+    "id": "q25",
+    "question": "What percentage of Southwest flights were on time in July 2025?",
+    "sql": "SELECT ROUND(100.0 * COUNT(*) FILTER (WHERE ARR_DEL15 = 0) / COUNT(*), 2) AS on_time_pct FROM flights\n                WHERE OP_UNIQUE_CARRIER = 'WN' AND YEAR = 2025 AND MONTH = 7",
+    "columns": [
+      "on_time_pct"
+    ],
+    "rows": [
+      [
+        69.86
+      ]
+    ]
+  },
+  {
+    "id": "q26",
+    "question": "What was Mesa Airlines' on-time percentage?",
+    "expect": "no_data",
+    "columns": [],
+    "rows": []
+  },
+  {
+    "id": "q27",
+    "question": "How many flights were there in 2022?",
+    "expect": "no_data",
+    "columns": [],
+    "rows": []
+  },
+  {
+    "id": "q28",
+    "question": "What was the on-time percentage for flights to Dubai?",
+    "expect": "no_data",
+    "columns": [],
     "rows": []
   }
 ]
