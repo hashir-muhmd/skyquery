@@ -10,7 +10,7 @@
   {
     "id": "q02",
     "question": "What is the overall on-time percentage?",
-    "sql": "SELECT ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage\nFROM flights",
+    "sql": "SELECT ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage FROM flights",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -18,7 +18,7 @@
   {
     "id": "q03",
     "question": "What is the average arrival delay in minutes?",
-    "sql": "SELECT AVG(arr_delay_min) AS avg_arrival_delay_min\nFROM flights\nWHERE arr_delay_min IS NOT NULL",
+    "sql": "SELECT ROUND(AVG(arr_delay_min), 2) AS avg_arr_delay FROM flights",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -26,7 +26,7 @@
   {
     "id": "q04",
     "question": "What is the average departure delay in minutes?",
-    "sql": "SELECT AVG(dep_delay_min) AS avg_departure_delay_min\nFROM flights\nWHERE dep_delay_min IS NOT NULL",
+    "sql": "SELECT ROUND(AVG(dep_delay_min), 2) AS avg_dep_delay FROM flights",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -34,7 +34,7 @@
   {
     "id": "q05",
     "question": "What percentage of flights were cancelled?",
-    "sql": "SELECT ROUND(100 * AVG(is_cancelled::INT), 2) AS cancellation_rate\nFROM flights",
+    "sql": "SELECT ROUND(100 * AVG(is_cancelled::INT), 2) AS cancellation_rate FROM flights",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -42,7 +42,7 @@
   {
     "id": "q06",
     "question": "How many cancellations were there for each reason?",
-    "sql": "SELECT cancellation_reason, COUNT(*) AS cancellation_count\nFROM flights\nWHERE is_cancelled = TRUE\nGROUP BY cancellation_reason",
+    "sql": "SELECT cancellation_reason, COUNT(*) AS cancellations FROM flights WHERE is_cancelled = TRUE GROUP BY cancellation_reason ORDER BY cancellations DESC",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -50,15 +50,15 @@
   {
     "id": "q07",
     "question": "What are the total delay minutes by cause, in millions?",
-    "sql": "SELECT cause, SUM(minutes) / 60000000 AS total_delay_minutes\nFROM delay_causes\nGROUP BY cause",
-    "correct": false,
+    "sql": "SELECT cause, ROUND(SUM(minutes) / 1e6, 2) AS delay_millions FROM delay_causes GROUP BY cause ORDER BY delay_millions DESC",
+    "correct": true,
     "attempts": 1,
     "error": null
   },
   {
     "id": "q08",
     "question": "What is the on-time percentage for each carrier, best to worst?",
-    "sql": "SELECT \n    carrier_code, \n    carrier_name, \n    ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage\nFROM \n    flights\nGROUP BY \n    carrier_code, \n    carrier_name\nORDER BY \n    on_time_percentage DESC",
+    "sql": "SELECT carrier_name, ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage\nFROM flights\nGROUP BY carrier_name\nORDER BY on_time_percentage DESC",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -66,7 +66,7 @@
   {
     "id": "q09",
     "question": "What is the on-time percentage for each month?",
-    "sql": "SELECT \n    month, \n    month_name, \n    ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage\nFROM \n    flights\nGROUP BY \n    month, \n    month_name\nORDER BY \n    month",
+    "sql": "SELECT month_name, ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage\nFROM flights\nGROUP BY month_name\nORDER BY month_name",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -82,7 +82,7 @@
   {
     "id": "q11",
     "question": "How many flights did Mesa Airlines (YV) operate each year?",
-    "sql": "SELECT year, COUNT(*) AS flight_count\nFROM flights\nWHERE carrier_code = 'YV'\nGROUP BY year\nORDER BY year",
+    "sql": "SELECT year, COUNT(*) AS flights FROM flights WHERE carrier_code = 'YV' GROUP BY year ORDER BY year",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -90,7 +90,7 @@
   {
     "id": "q12",
     "question": "What was Delta's on-time percentage in 2024?",
-    "sql": "SELECT ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage\nFROM flights\nWHERE year = 2024 AND carrier_code = 'DL'",
+    "sql": "SELECT ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage \nFROM flights \nWHERE carrier_name ILIKE '%Delta%' AND year = 2024",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -98,7 +98,7 @@
   {
     "id": "q13",
     "question": "How many flights departed from JFK in 2023?",
-    "sql": "SELECT COUNT(*) \nFROM flights \nWHERE origin = 'JFK' AND YEAR = 2023",
+    "sql": "SELECT COUNT(*) AS flights_from_jfk FROM flights WHERE origin = 'JFK' AND year = 2023",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -106,7 +106,7 @@
   {
     "id": "q14",
     "question": "How did the on-time percentage change from year to year?",
-    "sql": "SELECT \n    year, \n    ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage\nFROM \n    flights\nGROUP BY \n    year\nORDER BY \n    year",
+    "sql": "SELECT year, ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage\nFROM flights\nGROUP BY year\nORDER BY year",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -114,7 +114,7 @@
   {
     "id": "q15",
     "question": "What was the average NAS delay per delayed flight in each year?",
-    "sql": "SELECT \n    year, \n    AVG(nas_delay_min) AS avg_nas_delay_min\nFROM \n    flights\nWHERE \n    is_delayed = TRUE\nGROUP BY \n    year",
+    "sql": "SELECT year, AVG(nas_delay_min) AS avg_nas_delay FROM flights WHERE is_delayed AND year BETWEEN 2023 AND 2025 GROUP BY year ORDER BY year",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -122,7 +122,7 @@
   {
     "id": "q16",
     "question": "Which delay cause accounts for the most total delay minutes, and how many minutes?",
-    "sql": "SELECT cause, SUM(minutes) AS total_delay_minutes\nFROM delay_causes\nGROUP BY cause\nORDER BY total_delay_minutes DESC\nLIMIT 1",
+    "sql": "SELECT cause, SUM(minutes) AS total_minutes \nFROM delay_causes \nGROUP BY cause \nORDER BY total_minutes DESC \nLIMIT 1",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -130,15 +130,15 @@
   {
     "id": "q17",
     "question": "For flights that had a weather delay, what was the average weather delay in minutes?",
-    "sql": "SELECT AVG(weather_delay_min) AS avg_weather_delay_min\nFROM delay_causes\nWHERE cause = 'Weather'",
-    "correct": false,
-    "attempts": 3,
-    "error": "Binder Error: Referenced column \"weather_delay_min\" not found in FROM clause!"
+    "sql": "SELECT AVG(minutes) AS avg_weather_delay FROM delay_causes WHERE cause = 'Weather'",
+    "correct": true,
+    "attempts": 1,
+    "error": null
   },
   {
     "id": "q18",
     "question": "Which 5 airports with at least 10,000 arriving flights had the best on-time percentage for arrivals?",
-    "sql": "SELECT origin AS airport, ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage\nFROM flights\nWHERE origin IN (\n    SELECT origin\n    FROM flights\n    GROUP BY origin\n    HAVING COUNT(*) >= 10000\n)\nGROUP BY origin\nORDER BY on_time_percentage DESC\nLIMIT 5",
+    "sql": "SELECT origin AS airport, ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage\nFROM flights\nGROUP BY origin\nHAVING COUNT(*) >= 10000\nORDER BY on_time_percentage DESC\nLIMIT 5",
     "correct": false,
     "attempts": 1,
     "error": null
@@ -146,7 +146,7 @@
   {
     "id": "q19",
     "question": "Which airport had the most departing flights?",
-    "sql": "SELECT origin, COUNT(*) AS flight_count\nFROM flights\nGROUP BY origin\nORDER BY flight_count DESC\nLIMIT 1",
+    "sql": "SELECT origin AS airport, COUNT(*) AS departing_flights FROM flights GROUP BY origin ORDER BY departing_flights DESC LIMIT 1",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -154,7 +154,7 @@
   {
     "id": "q20",
     "question": "Which carrier had the highest cancellation rate?",
-    "sql": "SELECT carrier_code, carrier_name, ROUND(100 * AVG(is_cancelled::INT), 2) AS cancellation_rate\nFROM flights\nGROUP BY carrier_code, carrier_name\nORDER BY cancellation_rate DESC\nLIMIT 1",
+    "sql": "SELECT carrier_name, ROUND(100 * AVG(is_cancelled::INT), 2) AS cancellation_rate\nFROM flights\nGROUP BY carrier_name\nORDER BY cancellation_rate DESC\nLIMIT 1",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -170,7 +170,7 @@
   {
     "id": "q22",
     "question": "How many flights flew from JFK to LAX?",
-    "sql": "SELECT COUNT(*) \nFROM flights \nWHERE origin = 'JFK' AND dest = 'LAX'",
+    "sql": "SELECT COUNT(*) AS flights FROM flights WHERE origin = 'JFK' AND dest = 'LAX'",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -178,7 +178,7 @@
   {
     "id": "q23",
     "question": "What is the average flight distance in miles for each carrier?",
-    "sql": "SELECT carrier_code, carrier_name, AVG(distance_miles) AS avg_distance_miles\nFROM flights\nGROUP BY carrier_code, carrier_name",
+    "sql": "SELECT carrier_name, AVG(distance_miles) AS avg_distance_miles\nFROM flights\nGROUP BY carrier_name\nORDER BY avg_distance_miles DESC",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -186,7 +186,7 @@
   {
     "id": "q24",
     "question": "How many flights were diverted?",
-    "sql": "SELECT COUNT(*) AS diverted_flights\nFROM flights\nWHERE is_diverted = TRUE",
+    "sql": "SELECT COUNT(*) AS diverted_flights FROM flights WHERE is_diverted = TRUE",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -194,7 +194,7 @@
   {
     "id": "q25",
     "question": "What percentage of Southwest flights were on time in July 2025?",
-    "sql": "SELECT ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage\nFROM flights\nWHERE carrier_name = 'Southwest Airlines' AND month_name = 'July' AND year = 2025",
+    "sql": "SELECT ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage \nFROM flights \nWHERE carrier_name ILIKE '%Southwest%' AND month_name = 'July' AND year = 2025",
     "correct": true,
     "attempts": 1,
     "error": null
@@ -202,15 +202,15 @@
   {
     "id": "q26",
     "question": "What was Mesa Airlines' on-time percentage?",
-    "sql": "SELECT ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage\nFROM flights\nWHERE carrier_code = 'MQ'",
-    "correct": false,
+    "sql": "SELECT ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage FROM flights WHERE carrier_name ILIKE '%Mesa Airlines%'",
+    "correct": true,
     "attempts": 1,
     "error": null
   },
   {
     "id": "q27",
     "question": "How many flights were there in 2022?",
-    "sql": "SELECT COUNT(*) FROM flights WHERE year = 2022",
+    "sql": "SELECT COUNT(*) AS flights FROM flights WHERE year = 2022",
     "correct": true,
     "attempts": 1,
     "error": null

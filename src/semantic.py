@@ -75,8 +75,9 @@ SELECT * FROM (
         FROM flights
     )
     ON "Carrier", "Weather", "National Air System", "Security", "Late aircraft"
-    INTO NAME cause VALUE minutes
+        INTO NAME cause VALUE minutes
 )
+WHERE minutes > 0
 """
 
 

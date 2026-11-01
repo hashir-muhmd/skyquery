@@ -38,7 +38,7 @@ def single_call(question, con, schema):
     """One model call, no retry."""
     reply = ollama.chat(
         model=MODEL,
-        messages=[{"role": "user", "content": build_prompt(question, schema)}],
+        messages=[{"role": "user", "content": build_prompt(question, schema, examples="")}],
         options={"temperature": 0},
     )["message"]["content"]
     result = run_sql(con, extract_sql(reply))

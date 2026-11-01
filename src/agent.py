@@ -37,7 +37,8 @@ always say which years were included)."""
 def extract_sql(text):
     """Pull the SQL out of the reply, even if it's wrapped in ```sql ... ```."""
     match = re.search(r"```(?:sql)?\s*(.*?)```", text, re.DOTALL | re.IGNORECASE)
-    return (match.group(1) if match else text).strip()
+    sql = (match.group(1) if match else text).strip()
+    return re.sub(r"^SQL:\s*", "", sql, flags=re.IGNORECASE)
 
 
 def ask_model(messages):

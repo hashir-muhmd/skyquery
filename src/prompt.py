@@ -20,10 +20,10 @@ Columns:
 - carrier_delay_min, weather_delay_min, nas_delay_min, security_delay_min, late_aircraft_delay_min DOUBLE:
   delay minutes by cause. NULL means not applicable (only filled for flights 15+ min late)
 
-Table: delay_causes (one row per delayed flight per cause; only flights 15+ min late)
+Table: delay_causes (one row per delayed flight per cause that added delay; only flights 15+ min late)
 - flight_date, year, month, carrier_code, carrier_name, origin, dest (same as flights)
 - cause TEXT: 'Carrier', 'Weather', 'National Air System', 'Security', 'Late aircraft'
-- minutes DOUBLE: delay minutes from that cause (can be 0)
+- minutes DOUBLE: delay minutes from that cause (always > 0)
 
 Rules:
 - On-time percentage = ROUND(100 * AVG(is_on_time::INT), 2), over ALL flights.
@@ -35,15 +35,34 @@ Rules:
 - If the question names a carrier, airport or year that is not in the data, still filter for exactly what was asked (the result will be empty). Never substitute a different one.
 - For questions that compare delay causes (which cause, minutes by cause), use delay_causes and GROUP BY cause."""
 
-PROMPT_TEMPLATE = """You write DuckDB SQL for the table below.
+EXAMPLES = """Examples:
+
+Q: What was JetBlue's average arrival delay in 2023?
+SQL: SELECT ROUND(AVG(arr_delay_min), 2) AS avg_arr_delay FROM flights WHERE carrier_name ILIKE '%JetBlue%' AND year = 2023
+
+Q: Which 3 airports had the most arriving flights in 2024?
+SQL: SELECT dest AS airport, COUNT(*) AS arriving_flights FROM flights WHERE year = 2024 GROUP BY dest ORDER BY arriving_flights DESC LIMIT 3
+
+Q: How many flights had a security delay?
+SQL: SELECT COUNT(*) AS flights FROM flights WHERE security_delay_min > 0
+
+Q: What was the total departure delay in 2025, in millions of minutes?
+SQL: SELECT ROUND(SUM(dep_delay_min) / 1e6, 2) AS dep_delay_millions FROM flights WHERE year = 2025
+
+Q: How many delay minutes did weather cause in each year?
+SQL: SELECT year, SUM(minutes) AS weather_minutes FROM delay_causes WHERE cause = 'Weather' GROUP BY year ORDER BY year"""
+
+PROMPT_TEMPLATE = """You write DuckDB SQL for the tables below.
 
 {schema}
+
+{examples}
 
 Question: {question}
 
 Return only one SQL query, no explanation."""
 
 
-def build_prompt(question, schema=SCHEMA_DOC):
-    """Fill the template with a schema guide and the user's question."""
-    return PROMPT_TEMPLATE.format(schema=schema, question=question)
+def build_prompt(question, schema=SCHEMA_DOC, examples=EXAMPLES):
+    """Fill the template with a schema guide, examples and the user's question."""
+    return PROMPT_TEMPLATE.format(schema=schema, examples=examples, question=question)
