@@ -114,11 +114,12 @@ QUESTIONS = [
 ]
 
 
-def main():
+def build(questions, out_path):
+    """Run each question's verified SQL and save the answers."""
     con = duckdb.connect()
     con.execute("CREATE VIEW flights AS SELECT * FROM 'data/flights.parquet'")
 
-    for q in QUESTIONS:
+    for q in questions:
         if q.get("expect") == "no_data":
             q["columns"], q["rows"] = [], []
             print(f"\n{q['id']}: {q['question']}\n   (expected answer: no data)")
@@ -129,10 +130,9 @@ def main():
         print(f"\n{q['id']}: {q['question']}")
         print(rel)
 
-    out = Path("eval/answer_key.json")
-    out.write_text(json.dumps(QUESTIONS, indent=2, default=str))
-    print(f"\nSaved {len(QUESTIONS)} answers to {out}")
+    Path(out_path).write_text(json.dumps(questions, indent=2, default=str))
+    print(f"\nSaved {len(questions)} answers to {out_path}")
 
 
 if __name__ == "__main__":
-    main()
+    build(QUESTIONS, "eval/answer_key.json")

@@ -4,6 +4,14 @@ A local AI agent that answers plain-English questions about 20.9M US domestic fl
 
 **Stack:** Ollama (qwen2.5-coder:7b) · DuckDB · Parquet · Python. Free and fully local.
 
+## Results
+| Test set | Questions | Score |
+|---|---|---|
+| Dev (used for tuning) | 28 | **27/28 (96%)** |
+| Holdout (never used for tuning, run once) | 12 | **12/12 (100%)** |
+
+Caveats: both sets are small and written by the same author, and holdout questions are mostly simple (one or two filters).
+
 ## Try it
 ```
 python -m src.agent "Which 5 airports with at least 10,000 flights had the worst on-time percentage?"
@@ -17,8 +25,14 @@ python -m src.agent "Which 5 airports with at least 10,000 flights had the worst
 - [x] Week 1: Semantic layer (clean view + schema guide). Same 5 questions at temperature 0: **raw 3/5 → semantic 5/5**
 - [x] Week 1: Agent loop. Guarded SQL tool (SELECT-only, single statement, no file access, 1,000-row limit, 30 s timeout), retry on error (max 2), grounded plain-English summary that states its assumptions
 - [x] Week 2: Answer key grown to 28 questions (filters, trends, delay causes, airports, 3 "no data" trick questions). Full agent on this dev set: **22/28 → 27/28 (96%)** via general fixes: full carrier list, long-format `delay_causes` view, few-shot examples
-- Known limitation: the model still uses departure airports (origin) for some arrivals questions, despite a rule and an example (q18)
-- [ ] Week 2: Holdout set of new questions (never used for tuning) + comparison table (raw / semantic / agent)
+- [x] Week 2: Holdout set of 12 new questions, never used for tuning, run once: **12/12**
+- [ ] Week 2: Comparison table (raw / semantic / agent) + read-only database connection
+- [ ] Week 3: Simple UI, demo video, final README
+
+## Known limitations
+- The model sometimes uses departure airports (origin) for arrivals questions when combined with rankings and filters (dev q18), despite a rule and an example
+- The retry loop fixes SQL errors, not wrong answers: every remaining failure was valid SQL with the wrong meaning
+- "Departed" and "arrived" count all scheduled flights, including cancelled ones
 
 ## Data
 US BTS on-time performance data, 2023–2025, from the [SkyMetrics](https://github.com/hashir-muhmd/skymetrics) project. The data file is not stored in this repo. Run `scripts/convert_to_parquet.py` to build it.

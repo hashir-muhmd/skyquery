@@ -94,14 +94,17 @@ def is_correct(q, result):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=["raw", "semantic", "agent"], required=True)
-    mode = parser.parse_args().mode
+    parser.add_argument("--set", dest="qset", choices=["dev", "holdout"], default="dev")
+    args = parser.parse_args()
+    mode = args.mode
 
     if mode == "raw":
         con, schema = connect_raw()
     else:
         con, schema = connect_semantic(), SCHEMA_DOC
 
-    questions = json.loads(Path("eval/answer_key.json").read_text())
+    key_file = "eval/answer_key.json" if args.qset == "dev" else "eval/holdout_key.json"
+    questions = json.loads(Path(key_file).read_text())
     results, correct = [], 0
 
     for q in questions:
@@ -123,8 +126,8 @@ def main():
         results.append({"id": q["id"], "question": q["question"], "sql": result["sql"],
                         "correct": ok, "attempts": result["attempts"], "error": result.get("error")})
 
-    print(f"\n[{mode}] Score: {correct}/{len(questions)} ({100 * correct / len(questions):.0f}%)")
-    Path(f"eval/results_{mode}.json").write_text(json.dumps(results, indent=2))
+    print(f"\n[{mode} / {args.qset}] Score: {correct}/{len(questions)} ({100 * correct / len(questions):.0f}%)")
+    Path(f"eval/results_{mode}_{args.qset}.json").write_text(json.dumps(results, indent=2))
 
 
 if __name__ == "__main__":

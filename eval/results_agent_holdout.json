@@ -1,0 +1,98 @@
+[
+  {
+    "id": "h01",
+    "question": "What was United's on-time percentage in 2023?",
+    "sql": "SELECT ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage FROM flights WHERE carrier_name ILIKE '%United Airlines%' AND year = 2023",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "h02",
+    "question": "How many flights departed from ORD in 2025?",
+    "sql": "SELECT COUNT(*) AS flights_departed FROM flights WHERE origin = 'ORD' AND year = 2025",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "h03",
+    "question": "Which carrier had the worst on-time percentage in 2025?",
+    "sql": "SELECT carrier_name, ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage\nFROM flights\nWHERE year = 2025\nGROUP BY carrier_name\nORDER BY on_time_percentage ASC\nLIMIT 1",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "h04",
+    "question": "What was the average arrival delay for each year?",
+    "sql": "SELECT year, ROUND(AVG(arr_delay_min), 2) AS avg_arr_delay FROM flights GROUP BY year ORDER BY year",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "h05",
+    "question": "How many flights were cancelled because of weather in 2024?",
+    "sql": "SELECT COUNT(*) AS cancelled_flights FROM flights WHERE cancellation_reason = 'Weather' AND year = 2024",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "h06",
+    "question": "Which 3 airports with at least 10,000 departing flights had the highest cancellation rate?",
+    "sql": "SELECT origin AS airport, ROUND(100 * AVG(is_cancelled::INT), 2) AS cancellation_rate\nFROM flights\nGROUP BY origin\nHAVING COUNT(*) >= 10000\nORDER BY cancellation_rate DESC\nLIMIT 3",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "h07",
+    "question": "What was the total carrier delay in 2025, in millions of minutes?",
+    "sql": "SELECT ROUND(SUM(carrier_delay_min) / 1e6, 2) AS carrier_delay_millions FROM flights WHERE year = 2025",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "h08",
+    "question": "How many flights arrived at Denver (DEN) in 2024?",
+    "sql": "SELECT COUNT(*) AS flights_arrived FROM flights WHERE dest = 'DEN' AND year = 2024",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "h09",
+    "question": "What was the on-time percentage on Saturdays?",
+    "sql": "SELECT ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage FROM flights WHERE weekday = 'Saturday'",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "h10",
+    "question": "What was Spirit Airlines' cancellation rate in 2025?",
+    "sql": "SELECT ROUND(100 * AVG(is_cancelled::INT), 2) AS cancellation_rate FROM flights WHERE carrier_name ILIKE '%Spirit Airlines%' AND year = 2025",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "h11",
+    "question": "What was Hawaiian Airlines' on-time percentage in 2026?",
+    "sql": "SELECT ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_percentage \nFROM flights \nWHERE carrier_name ILIKE '%Hawaiian Airlines%' AND year = 2026",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "h12",
+    "question": "How many flights did Air Canada operate?",
+    "sql": "SELECT COUNT(*) AS flights FROM flights WHERE carrier_name ILIKE '%Air Canada%'",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  }
+]

@@ -1,0 +1,168 @@
+[
+  {
+    "id": "h01",
+    "question": "What was United's on-time percentage in 2023?",
+    "sql": "SELECT ROUND(100.0 * COUNT(*) FILTER (WHERE ARR_DEL15 = 0) / COUNT(*), 2) AS on_time_pct FROM flights WHERE OP_UNIQUE_CARRIER = 'UA' AND YEAR = 2023",
+    "columns": [
+      "on_time_pct"
+    ],
+    "rows": [
+      [
+        78.07
+      ]
+    ]
+  },
+  {
+    "id": "h02",
+    "question": "How many flights departed from ORD in 2025?",
+    "sql": "SELECT COUNT(*) AS flights FROM flights WHERE ORIGIN = 'ORD' AND YEAR = 2025",
+    "columns": [
+      "flights"
+    ],
+    "rows": [
+      [
+        327028
+      ]
+    ]
+  },
+  {
+    "id": "h03",
+    "question": "Which carrier had the worst on-time percentage in 2025?",
+    "sql": "SELECT OP_UNIQUE_CARRIER, ROUND(100.0 * COUNT(*) FILTER (WHERE ARR_DEL15 = 0) / COUNT(*), 2) AS on_time_pct FROM flights\n                WHERE YEAR = 2025 GROUP BY 1 ORDER BY 2 ASC LIMIT 1",
+    "columns": [
+      "OP_UNIQUE_CARRIER",
+      "on_time_pct"
+    ],
+    "rows": [
+      [
+        "OH",
+        68.96
+      ]
+    ]
+  },
+  {
+    "id": "h04",
+    "question": "What was the average arrival delay for each year?",
+    "sql": "SELECT YEAR, ROUND(AVG(ARR_DELAY), 2) AS avg_arr_delay FROM flights GROUP BY 1 ORDER BY 1",
+    "columns": [
+      "YEAR",
+      "avg_arr_delay"
+    ],
+    "rows": [
+      [
+        2023,
+        6.63
+      ],
+      [
+        2024,
+        7.1
+      ],
+      [
+        2025,
+        8.5
+      ]
+    ]
+  },
+  {
+    "id": "h05",
+    "question": "How many flights were cancelled because of weather in 2024?",
+    "sql": "SELECT COUNT(*) AS cancellations FROM flights WHERE CANCELLATION_CODE = 'B' AND YEAR = 2024",
+    "columns": [
+      "cancellations"
+    ],
+    "rows": [
+      [
+        53605
+      ]
+    ]
+  },
+  {
+    "id": "h06",
+    "question": "Which 3 airports with at least 10,000 departing flights had the highest cancellation rate?",
+    "sql": "SELECT ORIGIN, ROUND(100.0 * SUM(CANCELLED) / COUNT(*), 2) AS cancel_pct FROM flights\n               GROUP BY 1 HAVING COUNT(*) >= 10000 ORDER BY 2 DESC LIMIT 3",
+    "columns": [
+      "ORIGIN",
+      "cancel_pct"
+    ],
+    "rows": [
+      [
+        "ASE",
+        6.61
+      ],
+      [
+        "BGR",
+        3.58
+      ],
+      [
+        "LGA",
+        2.7
+      ]
+    ]
+  },
+  {
+    "id": "h07",
+    "question": "What was the total carrier delay in 2025, in millions of minutes?",
+    "sql": "SELECT ROUND(SUM(CARRIER_DELAY) / 1e6, 2) AS carrier_delay_millions FROM flights WHERE YEAR = 2025",
+    "columns": [
+      "carrier_delay_millions"
+    ],
+    "rows": [
+      [
+        36.32
+      ]
+    ]
+  },
+  {
+    "id": "h08",
+    "question": "How many flights arrived at Denver (DEN) in 2024?",
+    "sql": "SELECT COUNT(*) AS flights FROM flights WHERE DEST = 'DEN' AND YEAR = 2024",
+    "columns": [
+      "flights"
+    ],
+    "rows": [
+      [
+        308609
+      ]
+    ]
+  },
+  {
+    "id": "h09",
+    "question": "What was the on-time percentage on Saturdays?",
+    "sql": "SELECT ROUND(100.0 * COUNT(*) FILTER (WHERE ARR_DEL15 = 0) / COUNT(*), 2) AS on_time_pct FROM flights WHERE dayname(FL_DATE) = 'Saturday'",
+    "columns": [
+      "on_time_pct"
+    ],
+    "rows": [
+      [
+        78.34
+      ]
+    ]
+  },
+  {
+    "id": "h10",
+    "question": "What was Spirit Airlines' cancellation rate in 2025?",
+    "sql": "SELECT ROUND(100.0 * SUM(CANCELLED) / COUNT(*), 2) AS cancel_pct FROM flights\n               WHERE OP_UNIQUE_CARRIER = 'NK' AND YEAR = 2025",
+    "columns": [
+      "cancel_pct"
+    ],
+    "rows": [
+      [
+        1.5
+      ]
+    ]
+  },
+  {
+    "id": "h11",
+    "question": "What was Hawaiian Airlines' on-time percentage in 2026?",
+    "expect": "no_data",
+    "columns": [],
+    "rows": []
+  },
+  {
+    "id": "h12",
+    "question": "How many flights did Air Canada operate?",
+    "expect": "no_data",
+    "columns": [],
+    "rows": []
+  }
+]
