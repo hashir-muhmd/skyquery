@@ -5,12 +5,22 @@ A local AI agent that answers plain-English questions about 20.9M US domestic fl
 **Stack:** Ollama (qwen2.5-coder:7b) · DuckDB · Parquet · Python. Free and fully local.
 
 ## Results
+
+### What each layer adds (28 dev questions)
+| Mode | What's added | Score | On-time KPI questions |
+|---|---|---|---|
+| Raw | Raw columns, one try | 19/28 (68%) | 3/10 |
+| Semantic | + clean views + schema guide | 24/28 (86%) | 8/10 |
+| Agent | + few-shot examples + retry on error | **27/28 (96%)** | 9/10 |
+
+The raw model handled simple counts but got the main business metric wrong most of the time: wrong delay column, nulls silently dropped, invented formulas. The semantic layer fixed most of this by building the on-time definition into the data.
+
+### Holdout
 | Test set | Questions | Score |
 |---|---|---|
-| Dev (used for tuning) | 28 | **27/28 (96%)** |
 | Holdout (never used for tuning, run once) | 12 | **12/12 (100%)** |
 
-Caveats: both sets are small and written by the same author, and holdout questions are mostly simple (one or two filters).
+Caveats: both test sets are small and written by the same author, and holdout questions are mostly simple (one or two filters). Examples and retry are measured together, but retries never rescued a wrong answer in testing, so the gain mostly came from the examples.
 
 ## Try it
 ```
@@ -26,7 +36,8 @@ python -m src.agent "Which 5 airports with at least 10,000 flights had the worst
 - [x] Week 1: Agent loop. Guarded SQL tool (SELECT-only, single statement, no file access, 1,000-row limit, 30 s timeout), retry on error (max 2), grounded plain-English summary that states its assumptions
 - [x] Week 2: Answer key grown to 28 questions (filters, trends, delay causes, airports, 3 "no data" trick questions). Full agent on this dev set: **22/28 → 27/28 (96%)** via general fixes: full carrier list, long-format `delay_causes` view, few-shot examples
 - [x] Week 2: Holdout set of 12 new questions, never used for tuning, run once: **12/12**
-- [ ] Week 2: Comparison table (raw / semantic / agent) + read-only database connection
+- [x] Week 2: Comparison table: raw 68% → semantic 86% → agent 96%
+- [ ] Week 2: Read-only database connection
 - [ ] Week 3: Simple UI, demo video, final README
 
 ## Known limitations

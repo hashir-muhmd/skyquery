@@ -1,0 +1,226 @@
+[
+  {
+    "id": "q01",
+    "question": "How many flights are in the dataset?",
+    "sql": "SELECT COUNT(*) FROM flights",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q02",
+    "question": "What is the overall on-time percentage?",
+    "sql": "SELECT (SUM(CASE WHEN ARR_DEL15 = 0 THEN 1 ELSE 0 END) / COUNT(*)) * 100 AS overall_on_time_percentage\nFROM flights",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q03",
+    "question": "What is the average arrival delay in minutes?",
+    "sql": "SELECT AVG(ARR_DELAY) AS average_arrival_delay\nFROM flights",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q04",
+    "question": "What is the average departure delay in minutes?",
+    "sql": "SELECT AVG(DEP_DELAY) AS average_departure_delay\nFROM flights",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q05",
+    "question": "What percentage of flights were cancelled?",
+    "sql": "SELECT (SUM(CANCELLED) / COUNT(*)) * 100 AS cancellation_percentage FROM flights",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q06",
+    "question": "How many cancellations were there for each reason?",
+    "sql": "SELECT CANCELLATION_CODE, COUNT(*) AS CANCELLATION_COUNT\nFROM flights\nWHERE CANCELLED = 1\nGROUP BY CANCELLATION_CODE",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q07",
+    "question": "What are the total delay minutes by cause, in millions?",
+    "sql": "SELECT \n    SUM(CARRIER_DELAY) + SUM(WEATHER_DELAY) + SUM(NAS_DELAY) + SUM(SECURITY_DELAY) + SUM(LATE_AIRCRAFT_DELAY) AS total_delay_minutes\nFROM \n    flights",
+    "correct": false,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q08",
+    "question": "What is the on-time percentage for each carrier, best to worst?",
+    "sql": "SELECT OP_UNIQUE_CARRIER, \n       (1 - AVG(ARR_DEL15)) * 100 AS on_time_percentage\nFROM flights\nGROUP BY OP_UNIQUE_CARRIER\nORDER BY on_time_percentage DESC",
+    "correct": false,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q09",
+    "question": "What is the on-time percentage for each month?",
+    "sql": "SELECT \n    MONTH, \n    (SUM(CASE WHEN ARR_DEL15 = 0 THEN 1 ELSE 0 END) / COUNT(*)) * 100 AS on_time_percentage\nFROM \n    flights\nGROUP BY \n    MONTH",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q10",
+    "question": "What is the on-time percentage for each day of the week?",
+    "sql": "SELECT \n    DAY_OF_WEEK(FL_DATE) AS DAY_OF_WEEK,\n    AVG(ARR_DEL15) AS ON_TIME_PERCENTAGE\nFROM \n    flights\nGROUP BY \n    DAY_OF_WEEK(FL_DATE)\nORDER BY \n    DAY_OF_WEEK(FL_DATE)",
+    "correct": false,
+    "attempts": 1,
+    "error": "Catalog Error: Scalar Function with name day_of_week does not exist!"
+  },
+  {
+    "id": "q11",
+    "question": "How many flights did Mesa Airlines (YV) operate each year?",
+    "sql": "SELECT YEAR, COUNT(*) AS Flight_Count\nFROM flights\nWHERE OP_UNIQUE_CARRIER = 'YV'\nGROUP BY YEAR",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q12",
+    "question": "What was Delta's on-time percentage in 2024?",
+    "sql": "SELECT \n    (SUM(CASE WHEN DEP_DEL15 = 0 THEN 1 ELSE 0 END) / COUNT(*)) * 100 AS on_time_percentage\nFROM \n    flights\nWHERE \n    YEAR = 2024 \n    AND OP_UNIQUE_CARRIER = 'Delta'",
+    "correct": false,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q13",
+    "question": "How many flights departed from JFK in 2023?",
+    "sql": "SELECT COUNT(*) \nFROM flights \nWHERE YEAR = 2023 AND ORIGIN = 'JFK'",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q14",
+    "question": "How did the on-time percentage change from year to year?",
+    "sql": "SELECT \n    YEAR, \n    (SUM(CASE WHEN ARR_DEL15 = 0 THEN 1 ELSE 0 END) / COUNT(*)) * 100 AS on_time_percentage\nFROM \n    flights\nGROUP BY \n    YEAR\nORDER BY \n    YEAR",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q15",
+    "question": "What was the average NAS delay per delayed flight in each year?",
+    "sql": "SELECT YEAR, AVG(NAS_DELAY) AS avg_nas_delay\nFROM flights\nWHERE ARR_DELAY > 0\nGROUP BY YEAR",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q16",
+    "question": "Which delay cause accounts for the most total delay minutes, and how many minutes?",
+    "sql": "SELECT delay_type, SUM(delay_minutes) AS total_delay_minutes\nFROM (\n    SELECT 'Carrier Delay' AS delay_type, CARRIER_DELAY AS delay_minutes FROM flights\n    UNION ALL\n    SELECT 'Weather Delay' AS delay_type, WEATHER_DELAY AS delay_minutes FROM flights\n    UNION ALL\n    SELECT 'NAS Delay' AS delay_type, NAS_DELAY AS delay_minutes FROM flights\n    UNION ALL\n    SELECT 'Security Delay' AS delay_type, SECURITY_DELAY AS delay_minutes FROM flights\n    UNION ALL\n    SELECT 'Late Aircraft Delay' AS delay_type, LATE_AIRCRAFT_DELAY AS delay_minutes FROM flights\n)\nGROUP BY delay_type\nORDER BY total_delay_minutes DESC\nLIMIT 1",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q17",
+    "question": "For flights that had a weather delay, what was the average weather delay in minutes?",
+    "sql": "SELECT AVG(WEATHER_DELAY) AS AVG_WEATHER_DELAY\nFROM flights\nWHERE WEATHER_DELAY > 0",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q18",
+    "question": "Which 5 airports with at least 10,000 arriving flights had the best on-time percentage for arrivals?",
+    "sql": "SELECT DEST, (1 - AVG(ARR_DEL15)) * 100 AS on_time_percentage\nFROM flights\nGROUP BY DEST\nHAVING COUNT(*) >= 10000\nORDER BY on_time_percentage DESC\nLIMIT 5",
+    "correct": false,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q19",
+    "question": "Which airport had the most departing flights?",
+    "sql": "SELECT DEST, COUNT(*) AS DEPARTING_FLIGHTS\nFROM flights\nGROUP BY DEST\nORDER BY DEPARTING_FLIGHTS DESC\nLIMIT 1",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q20",
+    "question": "Which carrier had the highest cancellation rate?",
+    "sql": "SELECT OP_UNIQUE_CARRIER, (CANCELLED / FLIGHTS) * 100 AS CANCELLATION_RATE\nFROM flights\nGROUP BY OP_UNIQUE_CARRIER\nORDER BY CANCELLATION_RATE DESC\nLIMIT 1",
+    "correct": false,
+    "attempts": 1,
+    "error": "Binder Error: column \"CANCELLED\" must appear in the GROUP BY clause or must be part of an aggregate function."
+  },
+  {
+    "id": "q21",
+    "question": "Which single month (year and month) had the worst on-time percentage?",
+    "sql": "SELECT YEAR, MONTH, AVG(1 - (DEP_DELAY_NEW / 15)) AS on_time_percentage\nFROM flights\nGROUP BY YEAR, MONTH\nORDER BY on_time_percentage ASC\nLIMIT 1",
+    "correct": false,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q22",
+    "question": "How many flights flew from JFK to LAX?",
+    "sql": "SELECT COUNT(*) \nFROM flights \nWHERE ORIGIN = 'JFK' AND DEST = 'LAX'",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q23",
+    "question": "What is the average flight distance in miles for each carrier?",
+    "sql": "SELECT OP_UNIQUE_CARRIER, AVG(DISTANCE) AS AVG_DISTANCE\nFROM flights\nGROUP BY OP_UNIQUE_CARRIER",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q24",
+    "question": "How many flights were diverted?",
+    "sql": "SELECT COUNT(*) FROM flights WHERE DIVERTED = 1",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q25",
+    "question": "What percentage of Southwest flights were on time in July 2025?",
+    "sql": "SELECT \n    (SUM(CASE WHEN DEP_DEL15 = 0 THEN 1 ELSE 0 END) / COUNT(*)) * 100 AS on_time_percentage\nFROM \n    flights\nWHERE \n    YEAR = 2025 \n    AND MONTH = 7 \n    AND OP_UNIQUE_CARRIER = 'WN'",
+    "correct": false,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q26",
+    "question": "What was Mesa Airlines' on-time percentage?",
+    "sql": "SELECT \n    (SUM(CASE WHEN DEP_DEL15 = 0 THEN 1 ELSE 0 END) / COUNT(*)) * 100 AS on_time_percentage\nFROM \n    flights\nWHERE \n    OP_UNIQUE_CARRIER = 'UA'",
+    "correct": false,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q27",
+    "question": "How many flights were there in 2022?",
+    "sql": "SELECT COUNT(*) FROM flights WHERE YEAR = 2022",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  },
+  {
+    "id": "q28",
+    "question": "What was the on-time percentage for flights to Dubai?",
+    "sql": "SELECT \n    (SUM(CASE WHEN ARR_DEL15 = 0 THEN 1 ELSE 0 END) / COUNT(*)) * 100 AS on_time_percentage\nFROM \n    flights\nWHERE \n    DEST = 'DXB'",
+    "correct": true,
+    "attempts": 1,
+    "error": null
+  }
+]
