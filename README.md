@@ -22,6 +22,16 @@ The raw model handled simple counts but got the main business metric wrong most 
 
 Caveats: both test sets are small and written by the same author, and holdout questions are mostly simple (one or two filters). Examples and retry are measured together, but retries never rescued a wrong answer in testing, so the gain mostly came from the examples.
 
+## Safety
+Two independent layers protect the data:
+
+| Layer | How | Blocks |
+|---|---|---|
+| 1. Query checks | `src/sql_tool.py` | Anything but a single SELECT, file-reading functions and paths, results over 1,000 rows, queries over 30 s |
+| 2. Read-only database | `src/semantic.py` opens DuckDB with `read_only=True` | Any write (`DROP`, `CREATE`, `INSERT`...), even if layer 1 is bypassed |
+
+`scripts/test_read_only.py` sends harmful SQL straight to the database, skipping layer 1, to prove layer 2 refuses it.
+
 ## Try it
 ```
 python -m src.agent "Which 5 airports with at least 10,000 flights had the worst on-time percentage?"
@@ -37,7 +47,7 @@ python -m src.agent "Which 5 airports with at least 10,000 flights had the worst
 - [x] Week 2: Answer key grown to 28 questions (filters, trends, delay causes, airports, 3 "no data" trick questions). Full agent on this dev set: **22/28 → 27/28 (96%)** via general fixes: full carrier list, long-format `delay_causes` view, few-shot examples
 - [x] Week 2: Holdout set of 12 new questions, never used for tuning, run once: **12/12**
 - [x] Week 2: Comparison table: raw 68% → semantic 86% → agent 96%
-- [ ] Week 2: Read-only database connection
+- [x] Week 2: Read-only database connection as a second safety layer (dev score unchanged at 27/28)
 - [ ] Week 3: Simple UI, demo video, final README
 
 ## Known limitations

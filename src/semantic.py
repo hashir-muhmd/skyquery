@@ -1,7 +1,9 @@
 """Semantic layer: a clean, well-named view over the raw flight data."""
 import duckdb
+from pathlib import Path
 
 PARQUET = "data/flights.parquet"
+DB_PATH = "data/skyquery.duckdb"
 
 CARRIER_NAMES = {
     "9E": "Endeavor Air", "AA": "American Airlines", "AS": "Alaska Airlines",
@@ -81,13 +83,19 @@ WHERE minutes > 0
 """
 
 
-def connect():
-    """Open DuckDB with the semantic view ready to query."""
-    con = duckdb.connect()
+def build_db():
+    """Save the views into a small database file. This is the only write connection."""
+    Path(DB_PATH).parent.mkdir(exist_ok=True)
+    con = duckdb.connect(DB_PATH)
     con.execute(VIEW_SQL)
     con.execute(CAUSES_VIEW_SQL)
-    return con
+    con.close()
 
+
+def connect():
+    """Open the database in READ-ONLY mode, with the views ready to query."""
+    build_db()  # refresh the views first, so edits to VIEW_SQL always apply
+    return duckdb.connect(DB_PATH, read_only=True)
 
 if __name__ == "__main__":
     # Quick self-check against the answer key
