@@ -2,7 +2,9 @@
 
 A local AI agent that answers plain-English questions about 20.9M US domestic flights (2023–2025) by writing and running SQL.
 
-**Stack:** Ollama (qwen2.5-coder:7b) · DuckDB · Parquet · Python. Free and fully local.
+**Stack:** Ollama (qwen2.5-coder:7b) · DuckDB · Parquet · Python · Streamlit. Free and fully local.
+
+![SkyQuery screenshot](docs/screenshot.png)
 
 ## Results
 
@@ -22,6 +24,11 @@ The raw model handled simple counts but got the main business metric wrong most 
 
 Caveats: both test sets are small and written by the same author, and holdout questions are mostly simple (one or two filters). Examples and retry are measured together, but retries never rescued a wrong answer in testing, so the gain mostly came from the examples.
 
+## Honest when there's no data
+Asked about an airline that isn't in the dataset, SkyQuery says so instead of inventing a number:
+
+![No-data answer](docs/no_data.png)
+
 ## Safety
 Two independent layers protect the data:
 
@@ -33,6 +40,11 @@ Two independent layers protect the data:
 `scripts/test_read_only.py` sends harmful SQL straight to the database, skipping layer 1, to prove layer 2 refuses it.
 
 ## Try it
+Web app:
+```
+streamlit run app.py
+```
+Command line:
 ```
 python -m src.agent "Which 5 airports with at least 10,000 flights had the worst on-time percentage?"
 ```
@@ -48,11 +60,14 @@ python -m src.agent "Which 5 airports with at least 10,000 flights had the worst
 - [x] Week 2: Holdout set of 12 new questions, never used for tuning, run once: **12/12**
 - [x] Week 2: Comparison table: raw 68% → semantic 86% → agent 96%
 - [x] Week 2: Read-only database connection as a second safety layer (dev score unchanged at 27/28)
-- [ ] Week 3: Simple UI, demo video, final README
+- [x] Week 3: Streamlit app with example questions, results table, "Show SQL" and attempt count. Found and fixed a summary bug: for "no data" results the model reported "0.00%"; empty results now return a fixed honest message in code
+- [ ] Week 3: Architecture diagram, demo video, final README
 
 ## Known limitations
 - The model sometimes uses departure airports (origin) for arrivals questions when combined with rankings and filters (dev q18), despite a rule and an example
 - The retry loop fixes SQL errors, not wrong answers: every remaining failure was valid SQL with the wrong meaning
+- The eval scores the SQL result, not the summary text. Testing the app found a summary that turned "no data" into "0.00%" (now fixed in code)
+- A count of 0 (e.g. flights in 2022) is still summarised by the model, since 0 can be a real answer
 - "Departed" and "arrived" count all scheduled flights, including cancelled ones
 
 ## Data

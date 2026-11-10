@@ -74,6 +74,10 @@ def answer(question, con, verbose=True):
 
 def summarize(question, result, limit=20):
     """Second model call: turn the result table into a short, grounded answer."""
+    if not any(v is not None for row in result["rows"] for v in row):
+        return ("I found no matching data for this question. The dataset covers US domestic "
+                "flights from 15 carriers in 2023-2025, so what you asked about may not be in it.")
+
     lines = [" | ".join(result["columns"])]
     lines += [" | ".join(str(v) for v in row) for row in result["rows"][:limit]]
     prompt = SUMMARY_PROMPT.format(
