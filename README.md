@@ -27,17 +27,17 @@ Caveats: both test sets are small and written by the same author, and holdout qu
 ## How it works
 
 ```mermaid
-flowchart LR
-    U["Question"] --> P["Prompt<br/>schema + rules + examples"]
-    P --> M["Local model<br/>qwen2.5-coder:7b"]
-    M -->|SQL| G{"Layer 1<br/>query checks"}
-    G -->|allowed| D[("Layer 2<br/>read-only DuckDB")]
-    G -->|blocked| R["Retry<br/>max 2"]
+flowchart TD
+    U["Question"] --> P["Prompt: schema + rules + examples"]
+    P --> M["Local model: qwen2.5-coder:7b"]
+    M -->|SQL| G{"Layer 1: query checks"}
+    G -->|allowed| D[("Layer 2: read-only DuckDB")]
+    G -->|blocked| R["Retry, max 2"]
     D -->|error| R
     R --> M
     R -->|still failing| F["Honest give-up"]
     D -->|result| E{"Any data?"}
-    E -->|no| N["Fixed no-data<br/>message"]
+    E -->|no| N["Fixed no-data message"]
     E -->|yes| S["Model summary"]
     N --> O["Answer + table + SQL"]
     S --> O
