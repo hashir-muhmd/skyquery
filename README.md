@@ -27,26 +27,28 @@ Caveats: both test sets are small and written by the same author, and holdout qu
 ## How it works
 
 ```mermaid
-flowchart TD
-    U["User question<br/>Streamlit app or CLI"] --> P["Prompt builder<br/>schema guide + rules + 5 examples"]
-    P --> M["qwen2.5-coder:7b<br/>Ollama on local GPU"]
-    M -->|SQL| G{"Layer 1: query checks<br/>single SELECT, no file access,<br/>1,000 rows, 30 s timeout"}
-    G -->|blocked| R["Error sent back to model<br/>max 2 retries"]
-    G -->|allowed| D[("Layer 2: read-only DuckDB<br/>flights + delay_causes views<br/>over 20.9M-row Parquet")]
+flowchart LR
+    U["Question"] --> P["Prompt<br/>schema + rules + examples"]
+    P --> M["Local model<br/>qwen2.5-coder:7b"]
+    M -->|SQL| G{"Layer 1<br/>query checks"}
+    G -->|allowed| D[("Layer 2<br/>read-only DuckDB")]
+    G -->|blocked| R["Retry<br/>max 2"]
     D -->|error| R
     R --> M
+    R -->|still failing| F["Honest give-up"]
     D -->|result| E{"Any data?"}
-    E -->|no| N["Fixed honest message<br/>no model call"]
-    E -->|yes| S["Model writes summary<br/>numbers from result only<br/>+ assumptions note"]
+    E -->|no| N["Fixed no-data<br/>message"]
+    E -->|yes| S["Model summary"]
     N --> O["Answer + table + SQL"]
     S --> O
+    F --> O
 ```
 
 1. **Prompt:** the question is combined with the schema guide, business rules and five worked examples.
-2. **SQL:** the local model writes one SQL query.
-3. **Two safety layers:** keyword checks first, then a read-only database.
-4. **Retry:** if the query is blocked or fails, the error goes back to the model (up to 2 retries).
-5. **Answer:** if the result has no data, a fixed message is returned in code. Otherwise, the model summarises using only numbers from the result.
+2. **SQL:** the local model (qwen2.5-coder:7b on Ollama, local GPU) writes one SQL query.
+3. **Two safety layers:** keyword checks (single SELECT, no file access, 1,000-row limit, 30 s timeout), then a read-only DuckDB database over the 20.9M-row Parquet file.
+4. **Retry:** if the query is blocked or fails, the error goes back to the model, up to 2 retries. After that, it gives up honestly.
+5. **Answer:** if the result has no data, a fixed message is returned in code with no model call. Otherwise, the model summarises using only numbers from the result and states its assumptions.
 
 ## Honest when there's no data
 Asked about an airline that isn't in the dataset, SkyQuery says so instead of inventing a number:
@@ -85,7 +87,8 @@ python -m src.agent "Which 5 airports with at least 10,000 flights had the worst
 - [x] Week 2: Comparison table: raw 68% → semantic 86% → agent 96%
 - [x] Week 2: Read-only database connection as a second safety layer (dev score unchanged at 27/28)
 - [x] Week 3: Streamlit app with example questions, results table, "Show SQL" and attempt count. Found and fixed a summary bug: for "no data" results the model reported "0.00%"; empty results now return a fixed honest message in code
-- [ ] Week 3: Architecture diagram, demo video, final README
+- [x] Week 3: Architecture diagram
+- [ ] Week 3: Demo video, final README polish
 
 ## Known limitations
 - The model sometimes uses departure airports (origin) for arrivals questions when combined with rankings and filters (dev q18), despite a rule and an example
