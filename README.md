@@ -24,6 +24,30 @@ The raw model handled simple counts but got the main business metric wrong most 
 
 Caveats: both test sets are small and written by the same author, and holdout questions are mostly simple (one or two filters). Examples and retry are measured together, but retries never rescued a wrong answer in testing, so the gain mostly came from the examples.
 
+## How it works
+
+```mermaid
+flowchart TD
+    U["User question<br/>Streamlit app or CLI"] --> P["Prompt builder<br/>schema guide + rules + 5 examples"]
+    P --> M["qwen2.5-coder:7b<br/>Ollama on local GPU"]
+    M -->|SQL| G{"Layer 1: query checks<br/>single SELECT, no file access,<br/>1,000 rows, 30 s timeout"}
+    G -->|blocked| R["Error sent back to model<br/>max 2 retries"]
+    G -->|allowed| D[("Layer 2: read-only DuckDB<br/>flights + delay_causes views<br/>over 20.9M-row Parquet")]
+    D -->|error| R
+    R --> M
+    D -->|result| E{"Any data?"}
+    E -->|no| N["Fixed honest message<br/>no model call"]
+    E -->|yes| S["Model writes summary<br/>numbers from result only<br/>+ assumptions note"]
+    N --> O["Answer + table + SQL"]
+    S --> O
+```
+
+1. **Prompt:** the question is combined with the schema guide, business rules and five worked examples.
+2. **SQL:** the local model writes one SQL query.
+3. **Two safety layers:** keyword checks first, then a read-only database.
+4. **Retry:** if the query is blocked or fails, the error goes back to the model (up to 2 retries).
+5. **Answer:** if the result has no data, a fixed message is returned in code. Otherwise, the model summarises using only numbers from the result.
+
 ## Honest when there's no data
 Asked about an airline that isn't in the dataset, SkyQuery says so instead of inventing a number:
 
