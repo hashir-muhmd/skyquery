@@ -6,6 +6,13 @@ A local AI agent that answers plain-English questions about 20.9M US domestic fl
 
 ![SkyQuery screenshot](docs/screenshot.png)
 
+## Why I built this
+Most "chat with your data" demos look impressive but are never measured, and language models confidently give wrong answers to data questions. I wanted to find out how accurate a small, free, local model could actually be, and what it takes to make it trustworthy:
+- **Measure it:** a verified answer key, a holdout set and a comparison of each layer's effect
+- **Make the meaning explicit:** a semantic layer that builds business definitions into the data
+- **Make it safe:** two independent layers that stop the agent from changing data or reading other files
+- **Make it honest:** it shows its SQL, states its assumptions, and says so when there's no data
+
 ## Results
 
 ### What each layer adds (28 dev questions)
@@ -65,14 +72,40 @@ Two independent layers protect the data:
 
 `scripts/test_read_only.py` sends harmful SQL straight to the database, skipping layer 1, to prove layer 2 refuses it.
 
-## Try it
-Web app:
+## Setup
+**Needs:** Python 3.11, [Ollama](https://ollama.com), and ideally an NVIDIA GPU with about 6 GB free VRAM (it also runs on CPU, more slowly).
+
+1. **Get the model:**
+   ```
+   ollama pull qwen2.5-coder:7b
+   ```
+2. **Clone and install:**
+   ```
+   git clone https://github.com/hashir-muhmd/skyquery.git
+   cd skyquery
+   python -m venv .venv
+   .venv\Scripts\Activate.ps1        # macOS/Linux: source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
+3. **Get the data:** download the BTS "Reporting Carrier On-Time Performance" monthly CSVs for 2023–2025 (36 files, same columns as the [SkyMetrics](https://github.com/hashir-muhmd/skymetrics) project) from [BTS TranStats](https://www.transtats.bts.gov/), and put them in `data/raw/`.
+4. **Build the Parquet file:**
+   ```
+   python scripts/convert_to_parquet.py
+   ```
+5. **Run it:**
+   ```
+   streamlit run app.py
+   ```
+   Or from the command line:
+   ```
+   python -m src.agent "Which 5 airports with at least 10,000 flights had the worst on-time percentage?"
+   ```
+
+**Run the tests:**
 ```
-streamlit run app.py
-```
-Command line:
-```
-python -m src.agent "Which 5 airports with at least 10,000 flights had the worst on-time percentage?"
+python -m eval.run_eval --mode agent
+python -m eval.run_eval --mode agent --set holdout
+python -m scripts.test_read_only
 ```
 
 ## Progress
@@ -87,8 +120,8 @@ python -m src.agent "Which 5 airports with at least 10,000 flights had the worst
 - [x] Week 2: Comparison table: raw 68% → semantic 86% → agent 96%
 - [x] Week 2: Read-only database connection as a second safety layer (dev score unchanged at 27/28)
 - [x] Week 3: Streamlit app with example questions, results table, "Show SQL" and attempt count. Found and fixed a summary bug: for "no data" results the model reported "0.00%"; empty results now return a fixed honest message in code
-- [x] Week 3: Architecture diagram
-- [ ] Week 3: Demo video, final README polish
+- [x] Week 3: Architecture diagram, setup guide, reproducible data path
+- [ ] Week 3: Demo video
 
 ## Known limitations
 - The model sometimes uses departure airports (origin) for arrivals questions when combined with rankings and filters (dev q18), despite a rule and an example
@@ -98,4 +131,4 @@ python -m src.agent "Which 5 airports with at least 10,000 flights had the worst
 - "Departed" and "arrived" count all scheduled flights, including cancelled ones
 
 ## Data
-US BTS on-time performance data, 2023–2025, from the [SkyMetrics](https://github.com/hashir-muhmd/skymetrics) project. The data file is not stored in this repo. Run `scripts/convert_to_parquet.py` to build it.
+US BTS on-time performance data, 2023–2025, from the [SkyMetrics](https://github.com/hashir-muhmd/skymetrics) project. The data files are not stored in this repo; see Setup to build them.

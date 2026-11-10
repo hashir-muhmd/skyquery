@@ -1,11 +1,12 @@
 """Convert the 36 SkyMetrics CSV files into one Parquet file."""
+import os
 import time
 from pathlib import Path
 
 import duckdb
 
-# Where the raw CSVs live (from the SkyMetrics project)
-RAW_DIR = Path(r"C:\Users\hashi\Documents\Programming\Projects\skymetrics\data\raw")
+# Folder with the 36 raw CSVs. Default: data/raw. Override with the SKYQUERY_RAW_DIR environment variable.
+RAW_DIR = Path(os.environ.get("SKYQUERY_RAW_DIR", "data/raw"))
 
 # Where the Parquet file goes (skyquery/data/flights.parquet)
 OUT_FILE = Path(__file__).resolve().parent.parent / "data" / "flights.parquet"
