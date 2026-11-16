@@ -1,8 +1,9 @@
 """First queries on flights.parquet: check types and match SkyMetrics numbers."""
+from src.semantic import PARQUET
 import duckdb
 
 con = duckdb.connect()
-con.execute("CREATE VIEW flights AS SELECT * FROM 'data/flights.parquet'")
+con.execute(f"CREATE VIEW flights AS SELECT * FROM '{PARQUET}'")
 
 # 1. Column names and types
 print(con.sql("DESCRIBE flights"))

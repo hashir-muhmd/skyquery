@@ -1,4 +1,5 @@
-"""Test three on-time definitions to find which one matches SkyMetrics (79.1%)."""
+"""Test four on-time definitions (A-D) to find which one matches the SkyMetrics dashboard (79.1%)."""
+from src.semantic import PARQUET
 import duckdb
 
 con = duckdb.connect()
@@ -6,7 +7,7 @@ con.execute("CREATE VIEW flights AS SELECT * FROM 'data/flights.parquet'")
 
 print(con.sql("""
     SELECT
-        -- A: on-time / ALL flights (what the handoff says)
+        -- A: on-time / ALL flights (the intended definition)
         ROUND(100.0 * COUNT(*) FILTER (WHERE ARR_DEL15 = 0) / COUNT(*), 1)
             AS a_all_flights,
         -- B: on-time / flights that have an arrival result (no cancelled or diverted)

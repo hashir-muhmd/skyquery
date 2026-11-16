@@ -1,4 +1,5 @@
 """Build the answer key: questions + verified SQL + correct results."""
+from src.semantic import PARQUET
 import json
 from pathlib import Path
 
@@ -117,7 +118,7 @@ QUESTIONS = [
 def build(questions, out_path):
     """Run each question's verified SQL and save the answers."""
     con = duckdb.connect()
-    con.execute("CREATE VIEW flights AS SELECT * FROM 'data/flights.parquet'")
+    con.execute(f"CREATE VIEW flights AS SELECT * FROM '{PARQUET}'")
 
     for q in questions:
         if q.get("expect") == "no_data":
