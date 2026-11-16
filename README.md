@@ -73,9 +73,9 @@ Two independent layers protect the data:
 Layer 1 is a keyword blocklist, so it can be bypassed: a pre-portfolio code review found four ways around it. Layer 2 is an allowlist enforced by DuckDB itself. `scripts/test_read_only.py` proves it: it creates a real file outside the project, then sends write, read and unlock attempts straight to the database (skipping layer 1), on both a connection and a cursor. All are refused.
 
 ## Setup
-**Needs:** Python 3.11, [Ollama](https://ollama.com), and ideally an NVIDIA GPU with about 6 GB free VRAM (it also runs on CPU, more slowly).
+**Needs:** Python 3.11, [Ollama](https://ollama.com), and ideally an NVIDIA GPU with about 6 GB free VRAM (it also runs on CPU, more slowly). Run all commands from the `skyquery` folder.
 
-1. **Get the model:**
+1. **Get the model** (Ollama must be running, which it usually does in the background after install):
    ```
    ollama pull qwen2.5-coder:7b
    ```
@@ -87,24 +87,30 @@ Layer 1 is a keyword blocklist, so it can be bypassed: a pre-portfolio code revi
    .venv\Scripts\Activate.ps1        # macOS/Linux: source .venv/bin/activate
    pip install -r requirements.txt
    ```
-3. **Get the data:** download the BTS "Reporting Carrier On-Time Performance" monthly CSVs for 2023–2025 (36 files, same columns as the [SkyMetrics](https://github.com/hashir-muhmd/skymetrics) project) from [BTS TranStats](https://www.transtats.bts.gov/), and put them in `data/raw/`.
+3. **Get the data:** download the BTS "Reporting Carrier On-Time Performance" monthly CSVs for 2023–2025 (36 files, same columns as the [SkyMetrics](https://github.com/hashir-muhmd/skymetrics) project) from [BTS TranStats](https://www.transtats.bts.gov/), and put them in `data/raw/`. If they're stored somewhere else, set the `SKYQUERY_RAW_DIR` environment variable to that folder instead.
 4. **Build the Parquet file:**
    ```
    python scripts/convert_to_parquet.py
    ```
-5. **Run it:**
+5. **Run it** (`--server.address localhost` keeps the app off your local network):
    ```
-   streamlit run app.py
+   streamlit run app.py --server.address localhost
    ```
    Or from the command line:
    ```
    python -m src.agent "Which 5 airports with at least 10,000 flights had the worst on-time percentage?"
    ```
 
-**Run the tests:**
+### Run the evaluation
+These need Ollama running:
 ```
-python -m eval.run_eval --mode agent
-python -m eval.run_eval --mode agent --set holdout
+python -m eval.run_eval --mode agent                  # dev set (also: --mode raw, --mode semantic)
+python -m eval.run_eval --mode agent --set holdout    # holdout set
+```
+Note: the holdout result above comes from a single run. Running it again overwrites `eval/results_agent_holdout.json`.
+
+The safety test doesn't need the model:
+```
 python -m scripts.test_read_only
 ```
 
@@ -115,13 +121,14 @@ python -m scripts.test_read_only
 - [x] Day 2: Verified answer key (11 questions). Baseline with raw schema only: **2/5 correct (40%)**. Failures were about column meaning and metric definitions, not SQL syntax
 - [x] Week 1: Semantic layer (clean view + schema guide). Same 5 questions at temperature 0: **raw 3/5 → semantic 5/5**
 - [x] Week 1: Agent loop. Guarded SQL tool (SELECT-only, single statement, no file access, 1,000-row limit, 30 s timeout), retry on error (max 2), grounded plain-English summary that states its assumptions
-- [x] Week 2: Answer key grown to 28 questions (filters, trends, delay causes, airports, 3 "no data" trick questions). Full agent on this dev set: **22/28 → 27/28 (96%)** via general fixes: full carrier list, long-format `delay_causes` view, few-shot examples
+- [x] Week 2: Answer key grown to 28 questions (filters, trends, delay causes, airports, 4 "no data" questions). Full agent on this dev set: **22/28 → 27/28 (96%)** via general fixes: full carrier list, long-format `delay_causes` view, few-shot examples
 - [x] Week 2: Holdout set of 12 new questions, never used for tuning, run once: **12/12**
 - [x] Week 2: Comparison table: raw 68% → semantic 86% → agent 96%
 - [x] Week 2: Read-only database connection as a second safety layer (dev score unchanged at 27/28)
 - [x] Week 3: Streamlit app with example questions, results table, "Show SQL" and attempt count. Found and fixed a summary bug: for "no data" results the model reported "0.00%"; empty results now return a fixed honest message in code
 - [x] Week 3: Architecture diagram, setup guide, reproducible data path
 - [x] Week 3: Pre-portfolio code review found 4 ways to bypass layer 1 and read other files. Fixed with a DuckDB allowlist in layer 2, proven by tests; dev score unchanged at 27/28
+- [x] Week 3: Review clean-up: stricter no-data grading (score unchanged), pinned package versions, early eval files moved to `eval/archive/`
 
 ## Known limitations
 - The model sometimes uses departure airports (origin) for arrivals questions when combined with rankings and filters (dev q18), despite a rule and an example
@@ -131,4 +138,4 @@ python -m scripts.test_read_only
 - "Departed" and "arrived" count all scheduled flights, including cancelled ones
 
 ## Data
-US BTS on-time performance data, 2023–2025, from the [SkyMetrics](https://github.com/hashir-muhmd/skymetrics) project. The data files are not stored in this repo; see Setup to build them.
+US BTS on-time performance data, 2023–2025, from the [SkyMetrics](https://github.com/hashir-muhmd/skymetrics) project. The data files are not stored in this repo; see Setup to build them. `scripts/first_query.py` and `scripts/check_on_time.py` are the Day 1 checks that matched DuckDB against SkyMetrics and found the on-time definition bug.
