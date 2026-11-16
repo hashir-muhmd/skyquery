@@ -83,7 +83,7 @@ def summarize(question, result, limit=20):
     prompt = SUMMARY_PROMPT.format(
         question=question,
         sql=result["sql"],
-        count=len(result["rows"]),
+        count=f"{len(result['rows'])}+" if result["truncated"] else len(result["rows"]),
         table="\n".join(lines),
     )
     return ask_model([{"role": "user", "content": prompt}])
