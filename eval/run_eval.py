@@ -8,6 +8,7 @@ Modes:
 Usage:
     python -m eval.run_eval --mode agent
 """
+from src.semantic import PARQUET
 import argparse
 import json
 import math
@@ -28,7 +29,7 @@ LABEL_COLUMNS = {"year", "month", "quarter"}  # labels, not answers
 def connect_raw():
     """Raw Parquet columns, with only names and types as the schema."""
     con = duckdb.connect()
-    con.execute("CREATE VIEW flights AS SELECT * FROM 'data/flights.parquet'")
+    con.execute(f"CREATE VIEW flights AS SELECT * FROM '{PARQUET}'")
     cols = con.execute("DESCRIBE flights").fetchall()
     schema = "Table: flights\nColumns: " + ", ".join(f"{name} {dtype}" for name, dtype, *_ in cols)
     return con, schema
@@ -72,8 +73,12 @@ def is_correct(q, result):
     # Trick questions: nothing, zeros/nulls, or an honest give-up all count as correct
     if q.get("expect") == "no_data" or not q["rows"]:
         if not result["ok"]:
-            return True
-        return all(v == 0 for v in numeric(v for row in result["rows"] for v in row))
+            return True                                  # honest give-up
+        values = [v for row in result["rows"] for v in row]
+        if all(v is None for v in values):
+            return True                                  # empty result, or only nulls
+        pool = numeric(values)
+        return bool(pool) and all(v == 0 for v in pool)  # numbers, all zero (e.g. COUNT = 0)
 
     if not result["ok"]:
         return False
