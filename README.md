@@ -53,7 +53,7 @@ flowchart TD
 
 1. **Prompt:** the question is combined with the schema guide, business rules and five worked examples.
 2. **SQL:** the local model (qwen2.5-coder:7b on Ollama, local GPU) writes one SQL query.
-3. **Two safety layers:** keyword checks (single SELECT, no file access, 1,000-row limit, 30 s timeout), then a read-only DuckDB database over the 20.9M-row Parquet file.
+3. **Two safety layers:** keyword checks (single SELECT, no file access, 1,000-row limit, 30 s timeout), then a locked-down, read-only DuckDB database that may only read the 20.9M-row Parquet file.
 4. **Retry:** if the query is blocked or fails, the error goes back to the model, up to 2 retries. After that, it gives up honestly.
 5. **Answer:** if the result has no data, a fixed message is returned in code with no model call. Otherwise, the model summarises using only numbers from the result and states its assumptions.
 
@@ -65,12 +65,12 @@ Asked about an airline that isn't in the dataset, SkyQuery says so instead of in
 ## Safety
 Two independent layers protect the data:
 
-| Layer | How | Blocks |
+| Layer | How | What it does |
 |---|---|---|
-| 1. Query checks | `src/sql_tool.py` | Anything but a single SELECT, file-reading functions and paths, results over 1,000 rows, queries over 30 s |
-| 2. Read-only database | `src/semantic.py` opens DuckDB with `read_only=True` | Any write (`DROP`, `CREATE`, `INSERT`...), even if layer 1 is bypassed |
+| 1. Query checks | `src/sql_tool.py` | Allows only a single SELECT, blocks file-reading functions and paths, trims results to 1,000 rows, stops queries after 30 s |
+| 2. Locked-down database | `src/semantic.py` | Read-only, and DuckDB may read **only** `flights.parquet` (`allowed_paths`, external access off, settings locked, 4 GB memory limit). Holds even if layer 1 is bypassed |
 
-`scripts/test_read_only.py` sends harmful SQL straight to the database, skipping layer 1, to prove layer 2 refuses it.
+Layer 1 is a keyword blocklist, so it can be bypassed: a pre-portfolio code review found four ways around it. Layer 2 is an allowlist enforced by DuckDB itself. `scripts/test_read_only.py` proves it: it creates a real file outside the project, then sends write, read and unlock attempts straight to the database (skipping layer 1), on both a connection and a cursor. All are refused.
 
 ## Setup
 **Needs:** Python 3.11, [Ollama](https://ollama.com), and ideally an NVIDIA GPU with about 6 GB free VRAM (it also runs on CPU, more slowly).
@@ -121,7 +121,7 @@ python -m scripts.test_read_only
 - [x] Week 2: Read-only database connection as a second safety layer (dev score unchanged at 27/28)
 - [x] Week 3: Streamlit app with example questions, results table, "Show SQL" and attempt count. Found and fixed a summary bug: for "no data" results the model reported "0.00%"; empty results now return a fixed honest message in code
 - [x] Week 3: Architecture diagram, setup guide, reproducible data path
-- [ ] Week 3: Demo video
+- [x] Week 3: Pre-portfolio code review found 4 ways to bypass layer 1 and read other files. Fixed with a DuckDB allowlist in layer 2, proven by tests; dev score unchanged at 27/28
 
 ## Known limitations
 - The model sometimes uses departure airports (origin) for arrivals questions when combined with rankings and filters (dev q18), despite a rule and an example

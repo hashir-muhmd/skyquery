@@ -10,8 +10,8 @@ TIMEOUT_SECONDS = 30
 # Words that change data, change settings, or read files
 BLOCKED = re.compile(
     r"\b(insert|update|delete|drop|create|alter|attach|detach|copy|export|import|"
-    r"install|load|pragma|set|reset|call|checkpoint|vacuum|"
-    r"read_csv\w*|read_parquet|read_json\w*|read_text|read_blob|parquet_scan|glob)\b",
+    r"install|load|pragma|set|reset|call|checkpoint|vacuum|query|query_table|"
+    r"read_csv\w*|read_parquet|read_json\w*|read_ndjson\w*|read_text|read_blob|parquet_scan|glob)\b",
     re.IGNORECASE,
 )
 # File paths in quotes, e.g. FROM 'C:/secrets.csv'
@@ -73,7 +73,7 @@ if __name__ == "__main__":
         "normal query":    "SELECT carrier_name, COUNT(*) AS flights FROM flights GROUP BY 1 ORDER BY 2 DESC LIMIT 3",
         "delete attempt":  "DELETE FROM flights",
         "hidden 2nd step": "SELECT 1; DROP VIEW flights",
-        "read a file":     "SELECT * FROM read_csv('C:/Users/hashi/secrets.csv')",
+        "read a file":     "SELECT * FROM read_csv('C:/secrets.csv')",
         "file shortcut":   "SELECT * FROM 'data/flights.parquet'",
         "bad column":      "SELECT made_up_column FROM flights",
         "too many rows":   "SELECT flight_date FROM flights",

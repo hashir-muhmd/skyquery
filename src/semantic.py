@@ -1,16 +1,26 @@
-"""Semantic layer: a clean, well-named view over the raw flight data."""
-import duckdb
+"""Semantic layer: clean, well-named views over the raw flight data.
+
+Usage:
+    python -m src.semantic             # self-check
+    python -m src.semantic --rebuild   # rebuild the views after editing them
+"""
+import sys
 from pathlib import Path
 
-PARQUET = "data/flights.parquet"
-DB_PATH = "data/skyquery.duckdb"
+import duckdb
+
+# Absolute paths, so it works no matter which folder you run it from
+ROOT = Path(__file__).resolve().parent.parent  # the skyquery folder
+PARQUET = (ROOT / "data" / "flights.parquet").as_posix()
+DB_PATH = (ROOT / "data" / "skyquery.duckdb").as_posix()
 
 CARRIER_NAMES = {
     "9E": "Endeavor Air", "AA": "American Airlines", "AS": "Alaska Airlines",
     "B6": "JetBlue", "DL": "Delta Air Lines", "F9": "Frontier Airlines",
     "G4": "Allegiant Air", "HA": "Hawaiian Airlines", "MQ": "Envoy Air",
     "NK": "Spirit Airlines", "OH": "PSA Airlines", "OO": "SkyWest Airlines",
-    "UA": "United Airlines", "WN": "Southwest Airlines", "YV": "Mesa Airlines",
+    "UA": "United Airlines", "WN": "Southwest Airlines",
+    "YV": "Mesa Airlines",  # not in the 2023-2025 data; kept so the trick question returns nothing
     "YX": "Republic Airways",
 }
 
@@ -77,7 +87,7 @@ SELECT * FROM (
         FROM flights
     )
     ON "Carrier", "Weather", "National Air System", "Security", "Late aircraft"
-        INTO NAME cause VALUE minutes
+    INTO NAME cause VALUE minutes
 )
 WHERE minutes > 0
 """
@@ -93,11 +103,25 @@ def build_db():
 
 
 def connect():
-    """Open the database in READ-ONLY mode, with the views ready to query."""
-    build_db()  # refresh the views first, so edits to VIEW_SQL always apply
-    return duckdb.connect(DB_PATH, read_only=True)
+    """Open the database READ-ONLY, allowed to read only flights.parquet."""
+    if not Path(DB_PATH).exists():
+        build_db()
+    con = duckdb.connect(DB_PATH, read_only=True)
+
+    # Layer 2: DuckDB itself enforces these, however the SQL is written
+    con.execute(f"SET allowed_paths = ['{PARQUET}']")
+    con.execute("SET enable_external_access = false")
+    con.execute("SET autoload_known_extensions = false")
+    con.execute("SET memory_limit = '4GB'")
+    con.execute("SET lock_configuration = true")  # must be last: locks everything above
+    return con
+
 
 if __name__ == "__main__":
+    if "--rebuild" in sys.argv:
+        build_db()
+        print(f"Rebuilt views in {DB_PATH}")
+
     # Quick self-check against the answer key
     con = connect()
     print(con.sql("""
@@ -106,5 +130,3 @@ if __name__ == "__main__":
                COUNT(DISTINCT carrier_name)              AS carriers        -- expect 15
         FROM flights
     """))
-    print(con.sql("SELECT weekday, ROUND(100 * AVG(is_on_time::INT), 2) AS on_time_pct "
-                  "FROM flights GROUP BY 1 ORDER BY 2 DESC LIMIT 2"))  # expect Tuesday 80.83 first``
