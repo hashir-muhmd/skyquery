@@ -102,9 +102,23 @@ def build_db():
     con.close()
 
 
+def _views_current():
+    """True if the database exists and its views point to the current PARQUET path."""
+    if not Path(DB_PATH).exists():
+        return False
+    con = duckdb.connect(DB_PATH, read_only=True)
+    try:
+        row = con.execute(
+            "SELECT sql FROM duckdb_views() WHERE view_name = 'flights'"
+        ).fetchone()
+    finally:
+        con.close()
+    return row is not None and PARQUET in row[0]
+
+
 def connect():
     """Open the database READ-ONLY, allowed to read only flights.parquet."""
-    if not Path(DB_PATH).exists():
+    if not _views_current():  # missing, or the project folder was moved
         build_db()
     con = duckdb.connect(DB_PATH, read_only=True)
 

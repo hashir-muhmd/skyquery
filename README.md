@@ -101,6 +101,11 @@ Layer 1 is a keyword blocklist, so it can be bypassed: a pre-portfolio code revi
    python -m src.agent "Which 5 airports with at least 10,000 flights had the worst on-time percentage?"
    ```
 
+The database views are built automatically on first run, and rebuilt automatically if you move the project folder. If you edit the views in `src/semantic.py`, rebuild them with:
+```
+python -m src.semantic --rebuild
+```
+
 ### Run the evaluation
 These need Ollama running:
 ```
@@ -128,7 +133,7 @@ python -m scripts.test_read_only
 - [x] Week 3: Streamlit app with example questions, results table, "Show SQL" and attempt count. Found and fixed a summary bug: for "no data" results the model reported "0.00%"; empty results now return a fixed honest message in code
 - [x] Week 3: Architecture diagram, setup guide, reproducible data path
 - [x] Week 3: Pre-portfolio code review found 4 ways to bypass layer 1 and read other files. Fixed with a DuckDB allowlist in layer 2, proven by tests; dev score unchanged at 27/28
-- [x] Week 3: Review clean-up: stricter no-data grading (score unchanged), pinned package versions, early eval files moved to `eval/archive/`
+- [x] Week 3: Review clean-up: stricter no-data grading (score unchanged), pinned package versions, early eval files moved to `eval/archive/`. A follow-up re-check found and fixed 4 small issues introduced by the fixes
 
 ## Known limitations
 - The model sometimes uses departure airports (origin) for arrivals questions when combined with rankings and filters (dev q18), despite a rule and an example
@@ -138,4 +143,4 @@ python -m scripts.test_read_only
 - "Departed" and "arrived" count all scheduled flights, including cancelled ones
 
 ## Data
-US BTS on-time performance data, 2023–2025, from the [SkyMetrics](https://github.com/hashir-muhmd/skymetrics) project. The data files are not stored in this repo; see Setup to build them. `scripts/first_query.py` and `scripts/check_on_time.py` are the Day 1 checks that matched DuckDB against SkyMetrics and found the on-time definition bug.
+US BTS on-time performance data, 2023–2025, from the [SkyMetrics](https://github.com/hashir-muhmd/skymetrics) project. The data files are not stored in this repo; see Setup to build them. The Day 1 checks that matched DuckDB against SkyMetrics and found the on-time definition bug can be run with `python -m scripts.first_query` and `python -m scripts.check_on_time`.

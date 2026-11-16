@@ -3,7 +3,7 @@ from src.semantic import PARQUET
 import duckdb
 
 con = duckdb.connect()
-con.execute("CREATE VIEW flights AS SELECT * FROM 'data/flights.parquet'")
+con.execute(f"CREATE VIEW flights AS SELECT * FROM '{PARQUET}'")
 
 print(con.sql("""
     SELECT

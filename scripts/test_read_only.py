@@ -23,20 +23,22 @@ SHOULD_FAIL = {
     "unlock settings":    "SET enable_external_access = true",
 }
 
-con = connect()
 failures = 0
-for label, handle in [("connection", con), ("cursor (what the app uses)", con.cursor())]:
-    print(f"\n--- {label} ---")
-    for name, sql in {**SHOULD_RUN, **SHOULD_FAIL}.items():
-        try:
-            handle.execute(sql).fetchall()
-            ran, err = True, ""
-        except Exception as e:
-            ran, err = False, str(e).splitlines()[0]
-        ok = ran == (name in SHOULD_RUN)
-        failures += not ok
-        print(f"{'✅' if ok else '❌'} {'ran    ' if ran else 'refused'} {name}"
-              + (f": {err[:70]}" if err else ""))
+try:
+    con = connect()
+    for label, handle in [("connection", con), ("cursor (what the app uses)", con.cursor())]:
+        print(f"\n--- {label} ---")
+        for name, sql in {**SHOULD_RUN, **SHOULD_FAIL}.items():
+            try:
+                handle.execute(sql).fetchall()
+                ran, err = True, ""
+            except Exception as e:
+                ran, err = False, str(e).splitlines()[0]
+            ok = ran == (name in SHOULD_RUN)
+            failures += not ok
+            print(f"{'✅' if ok else '❌'} {'ran    ' if ran else 'refused'} {name}"
+                  + (f": {err[:70]}" if err else ""))
+finally:
+    secret.unlink(missing_ok=True)  # always clean up, even if something above crashes
 
-secret.unlink()  # clean up the fake secret file
 print("\nAll checks passed" if failures == 0 else f"\n{failures} CHECK(S) FAILED")
