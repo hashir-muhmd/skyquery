@@ -13,6 +13,7 @@ import duckdb
 ROOT = Path(__file__).resolve().parent.parent  # the skyquery folder
 PARQUET = (ROOT / "data" / "flights.parquet").as_posix()
 DB_PATH = (ROOT / "data" / "skyquery.duckdb").as_posix()
+PARQUET_SQL = PARQUET.replace("'", "''")  # safe to put inside '...' in SQL
 
 CARRIER_NAMES = {
     "9E": "Endeavor Air", "AA": "American Airlines", "AS": "Alaska Airlines",
@@ -71,7 +72,7 @@ SELECT
     NAS_DELAY               AS nas_delay_min,
     SECURITY_DELAY          AS security_delay_min,
     LATE_AIRCRAFT_DELAY     AS late_aircraft_delay_min
-FROM '{PARQUET}'
+FROM '{PARQUET_SQL}'
 """
 
 CAUSES_VIEW_SQL = """
@@ -113,7 +114,7 @@ def _views_current():
         ).fetchone()
     finally:
         con.close()
-    return row is not None and PARQUET in row[0]
+    return row is not None and PARQUET_SQL in row[0]
 
 
 def connect():
@@ -123,7 +124,7 @@ def connect():
     con = duckdb.connect(DB_PATH, read_only=True)
 
     # Layer 2: DuckDB itself enforces these, however the SQL is written
-    con.execute(f"SET allowed_paths = ['{PARQUET}']")
+    con.execute(f"SET allowed_paths = ['{PARQUET_SQL}']")
     con.execute("SET enable_external_access = false")
     con.execute("SET autoload_known_extensions = false")
     con.execute("SET memory_limit = '4GB'")

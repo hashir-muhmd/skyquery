@@ -13,6 +13,7 @@ import argparse
 import json
 import math
 import time
+from decimal import Decimal
 from pathlib import Path
 
 import duckdb
@@ -51,7 +52,7 @@ def numeric(values):
     """Keep real numbers only (skip text, booleans, nulls and NaN)."""
     out = []
     for v in values:
-        if isinstance(v, bool) or not isinstance(v, (int, float)):
+        if isinstance(v, bool) or not isinstance(v, (int, float, Decimal)):
             continue
         if isinstance(v, float) and math.isnan(v):
             continue

@@ -39,7 +39,7 @@ st.caption("Ask questions about 20.9M US domestic flights (2023–2025). Runs fu
 st.write("**Try an example:**")
 cols = st.columns(2)
 for i, example in enumerate(EXAMPLES):
-    cols[i % 2].button(example, on_click=use_example, args=(example,), use_container_width=True)
+    cols[i % 2].button(example, on_click=use_example, args=(example,), width="stretch")
 
 question = st.text_input("Your question", key="question",
                          placeholder="Which carrier had the best on-time percentage?")
